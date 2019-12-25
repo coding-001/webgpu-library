@@ -1,4 +1,4 @@
-import { mat4, vec3, glMatrix } from './vendor/gl-matrix.js';
+import { mat4, vec3, glMatrix, vec4 } from './vendor/gl-matrix.js';
 import glslangModule from './vendor/glslang.js';
 
 class AnimationFrame {
@@ -121,6 +121,21 @@ class Trigger {
     }
 }
 
+let lastID = 0;
+class VertexArray {
+    constructor(options) {
+        lastID += 1;
+        this.id = lastID;
+        this.buffers = options.buffers;
+        this.indexBuffer = options.indexBuffer;
+        this.count = options.count;
+        this.mode = options.mode || 'TRIANGLES';
+    }
+    addBuffer(buffer) {
+        this.buffers.push(buffer);
+    }
+}
+
 function getClientPoint(e) {
     if (e instanceof MouseEvent) {
         return {
@@ -132,6 +147,81 @@ function getClientPoint(e) {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
     };
+}
+function copyMat3ToBuffer(source, target, offset) {
+    for (let i = 0; i < 3; i += 1) {
+        const part = new Float32Array(source.buffer, i * 4 * 3, 3);
+        target.set(part, offset + i * 4);
+    }
+}
+function createCubeVao() {
+    const cubeArrayBuffer = new Float32Array([
+        // Bottom
+        +1, -1, +1, 0, -1, 0, 1, 1,
+        -1, -1, +1, 0, -1, 0, 0, 1,
+        -1, -1, -1, 0, -1, 0, 0, 0,
+        +1, -1, -1, 0, -1, 0, 1, 0,
+        +1, -1, +1, 0, -1, 0, 1, 1,
+        -1, -1, -1, 0, -1, 0, 0, 0,
+        // Right
+        +1, +1, +1, 1, 0, 0, 1, 1,
+        +1, -1, +1, 1, 0, 0, 0, 1,
+        +1, -1, -1, 1, 0, 0, 0, 0,
+        +1, +1, -1, 1, 0, 0, 1, 0,
+        +1, +1, +1, 1, 0, 0, 1, 1,
+        +1, -1, -1, 1, 0, 0, 0, 0,
+        // Top
+        -1, +1, +1, 0, 1, 0, 1, 1,
+        +1, +1, +1, 0, 1, 0, 0, 1,
+        +1, +1, -1, 0, 1, 0, 0, 0,
+        -1, +1, -1, 0, 1, 0, 1, 0,
+        -1, +1, +1, 0, 1, 0, 1, 1,
+        +1, +1, -1, 0, 1, 0, 0, 0,
+        // Left
+        -1, -1, +1, -1, 0, 0, 1, 1,
+        -1, +1, +1, -1, 0, 0, 0, 1,
+        -1, +1, -1, -1, 0, 0, 0, 0,
+        -1, -1, -1, -1, 0, 0, 1, 0,
+        -1, -1, +1, -1, 0, 0, 1, 1,
+        -1, +1, -1, -1, 0, 0, 0, 0,
+        // Front
+        +1, +1, +1, 0, 0, 1, 1, 1,
+        -1, +1, +1, 0, 0, 1, 0, 1,
+        -1, -1, +1, 0, 0, 1, 0, 0,
+        -1, -1, +1, 0, 0, 1, 0, 0,
+        +1, -1, +1, 0, 0, 1, 1, 0,
+        +1, +1, +1, 0, 0, 1, 1, 1,
+        // Back
+        +1, -1, -1, 0, 0, -1, 1, 1,
+        -1, -1, -1, 0, 0, -1, 0, 1,
+        -1, +1, -1, 0, 0, -1, 0, 0,
+        +1, +1, -1, 0, 0, -1, 1, 0,
+        +1, -1, -1, 0, 0, -1, 1, 1,
+        -1, +1, -1, 0, 0, -1, 0, 0,
+    ]);
+    return new VertexArray({
+        buffers: [
+            {
+                attributes: [
+                    {
+                        name: 'position',
+                    },
+                    {
+                        name: 'normal',
+                        offset: 4 * 3,
+                    },
+                    {
+                        name: 'uv',
+                        format: 'float2',
+                        offset: 4 * (3 + 3),
+                    },
+                ],
+                arrayStride: 4 * (3 + 3 + 2),
+                data: cubeArrayBuffer,
+            },
+        ],
+        count: 36,
+    });
 }
 // https://gpuweb.github.io/gpuweb/#coordinate-systems
 function perspective(out, fovy, aspect, near, far) {
@@ -596,6 +686,65 @@ class ComputePipeline extends Pipeline {
     }
 }
 
+const tempVec3 = vec3.create();
+const tempVec4 = vec4.create();
+class DataBuffer {
+    constructor(device, size, usage) {
+        this.offset = 0;
+        this.size = size;
+        this.data = new Float32Array(size);
+        this.buffer = device.createBuffer({
+            size: this.data.byteLength,
+            usage,
+        });
+    }
+    setVec3(value, normalize = false) {
+        if (normalize) {
+            vec3.normalize(tempVec3, value);
+            this.data.set(tempVec3, this.offset);
+        }
+        else {
+            this.data.set(value, this.offset);
+        }
+        this.offset += 4;
+    }
+    setVec4(value) {
+        this.data.set(value, this.offset);
+        this.offset += 4;
+    }
+    setMat3(value) {
+        copyMat3ToBuffer(value, this.data, this.offset);
+        this.offset += 12;
+    }
+    setMat4(value) {
+        this.data.set(value, this.offset);
+        this.offset += 16;
+    }
+    setValue(v0, v1, v2, v3 = 0, normalize = false) {
+        if (normalize) {
+            vec3.set(tempVec3, v0, v1, v2);
+            vec3.normalize(tempVec3, tempVec3);
+            vec4.set(tempVec4, tempVec3[0], tempVec3[1], tempVec3[2], v3);
+        }
+        else {
+            vec4.set(tempVec4, v0, v1, v2, v3);
+        }
+        this.data.set(tempVec4, this.offset);
+        this.offset += 4;
+    }
+    setData(data) {
+        this.data.set(data);
+        this.update();
+    }
+    update() {
+        this.buffer.setSubData(0, this.data);
+        this.offset = 0;
+    }
+    destroy() {
+        this.buffer.destroy();
+    }
+}
+
 class RenderPipeline extends Pipeline {
     constructor(options) {
         const { vertexShader, fragmentShader, vertexState, defines, bindGroupLayouts, alphaBlend, colorBlend, colorFormat = 'bgra8unorm', primitiveTopology = 'triangle-list', depthWriteEnabled = true, cullMode = 'none', blend = false, enableMSAA = false, depth = true, depthFormat = 'depth24plus-stencil8', depthCompare = 'less-equal', stencilReadMask = 0xFFFFFFFF, stencilWriteMask = 0xFFFFFFFF, writeMask = 0xF, stencilBack = {
@@ -709,6 +858,128 @@ class RenderPipeline extends Pipeline {
     }
 }
 
+class StorageBuffer extends DataBuffer {
+    constructor(device, size, usage = GPUBufferUsage.COPY_DST) {
+        // eslint-disable-next-line no-bitwise
+        super(device, size, GPUBufferUsage.STORAGE | usage);
+    }
+}
+
+class UniformBuffer extends DataBuffer {
+    constructor(device, size, usage = GPUBufferUsage.COPY_DST) {
+        // eslint-disable-next-line no-bitwise
+        super(device, size, GPUBufferUsage.UNIFORM | usage);
+    }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MODE_MAP = {
+    POINTS: 'point-list',
+    LINES: 'line-list',
+    LINE_LOOP: '',
+    LINE_STRIP: 'line-strip',
+    TRIANGLES: 'triangle-list',
+    TRIANGLE_STRIP: 'triangle-strip',
+    TRIANGLE_FAN: '',
+};
+class VertexArrayState {
+    constructor(device, vao) {
+        this.buffers = [];
+        this.keys = [];
+        this.vertexState = {
+            indexFormat: 'uint32',
+            vertexBuffers: [],
+        };
+        this.instanceCount = 1;
+        this.keys.push('uint32');
+        if (vao.indexBuffer) {
+            if (vao.indexBuffer instanceof Uint16Array) {
+                this.vertexState.indexFormat = 'uint16';
+                this.keys[0] = 'uint16';
+            }
+            this.indexBuffer = device.createBuffer({
+                size: vao.indexBuffer.byteLength,
+                // eslint-disable-next-line no-bitwise
+                usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+            });
+            this.indexBuffer.setSubData(0, vao.indexBuffer);
+        }
+        let inShaderLocation = 0;
+        let outShaderLocation = 0;
+        vao.buffers.forEach((buffer, i) => {
+            this.keys.push(`buffer${i}`);
+            const vertexBuffer = {
+                arrayStride: buffer.arrayStride,
+                stepMode: 'vertex',
+                attributes: new Array(),
+            };
+            this.vertexState.vertexBuffers.push(vertexBuffer);
+            buffer.attributes.forEach((attribute) => {
+                vertexBuffer.attributes.push({
+                    offset: attribute.offset || 0,
+                    format: attribute.format || 'float3',
+                    shaderLocation: inShaderLocation,
+                });
+                const name = attribute.name.toUpperCase();
+                this.keys.push(new KeyDefine(`IN_${name}`, inShaderLocation));
+                // TODO: set instanceCount vertexBuffer.stepMode once
+                if (attribute.name.startsWith('transform')) {
+                    this.instanceCount = buffer.data.byteLength / 4 / 16;
+                    vertexBuffer.stepMode = 'instance';
+                }
+                else {
+                    this.keys.push(new KeyDefine(`OUT_${name}`, outShaderLocation));
+                    if (attribute.name === 'tangent') {
+                        outShaderLocation += 3;
+                    }
+                    else {
+                        outShaderLocation += 1;
+                    }
+                }
+                inShaderLocation += 1;
+            });
+            const gpuBuffer = device.createBuffer({
+                size: buffer.data.byteLength,
+                // eslint-disable-next-line no-bitwise
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            });
+            gpuBuffer.setSubData(0, buffer.data);
+            this.buffers.push(gpuBuffer);
+        });
+        this.count = vao.count;
+        this.keys.push(vao.mode);
+        this.keys.push(new KeyDefine('NEXT_OUT_LOCATION', outShaderLocation));
+        this.key = this.keys.join(',');
+        this.primitiveTopology = MODE_MAP[vao.mode];
+    }
+    bind(bundleEncoder) {
+        this.buffers.forEach((buffer, i) => {
+            bundleEncoder.setVertexBuffer(i, buffer);
+        });
+        if (this.indexBuffer) {
+            bundleEncoder.setIndexBuffer(this.indexBuffer);
+        }
+    }
+    draw(bundleEncoder) {
+        if (this.indexBuffer) {
+            bundleEncoder.drawIndexed(this.count, this.instanceCount, 0, 0, 0);
+        }
+        else {
+            bundleEncoder.draw(this.count, this.instanceCount, 0, 0);
+        }
+    }
+    destroy() {
+        if (this.indexBuffer) {
+            this.indexBuffer.destroy();
+            this.indexBuffer = null;
+        }
+        this.buffers.forEach((buffer) => {
+            buffer.destroy();
+        });
+        this.buffers = null;
+    }
+}
+
 class LiteApp {
     constructor(options = {}) {
         const canvas = document.getElementById('canvas');
@@ -754,4 +1025,4 @@ class LiteApp {
     }
 }
 
-export { AnimationFrame, Camera, ChangeEvent, ComputePipeline, KeyDefine, LiteApp, Pipeline, RenderPipeline, Trigger, TriggerEvent, getClientPoint, initGlslang, perspective };
+export { AnimationFrame, Camera, ChangeEvent, ComputePipeline, DataBuffer, KeyDefine, LiteApp, Pipeline, RenderPipeline, StorageBuffer, Trigger, TriggerEvent, UniformBuffer, VertexArray, VertexArrayState, copyMat3ToBuffer, createCubeVao, getClientPoint, initGlslang, perspective };
