@@ -1,0 +1,46 @@
+{
+  "name": "webgpu-library",
+  "version": "0.0.1",
+  "description": "WebGPU Rendering Library",
+  "main": "docs/js/bundle.js",
+  "scripts": {
+    "start": "serve -l tcp://0.0.0.0:8000 docs",
+    "build": "npm run bundle&&npm run demo",
+    "bundle": "rollup -c tools/rollup.config.js",
+    "demo": "rollup -c tools/rollup.config.demo.js",
+    "eslint": "eslint --ext .ts src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coding-001/webgpu-library.git"
+  },
+  "keywords": [
+    "webgpu"
+  ],
+  "author": "code-001",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/coding-001/webgpu-library/issues"
+  },
+  "homepage": "https://github.com/coding-001/webgpu-library#readme",
+  "devDependencies": {
+    "@types/dat.gui": "^0.7.5",
+    "@types/gl-matrix": "^2.4.5",
+    "@typescript-eslint/eslint-plugin": "^2.13.0",
+    "@typescript-eslint/parser": "^2.13.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-import-resolver-typescript": "^2.0.0",
+    "eslint-plugin-import": "^2.19.1",
+    "rollup": "^1.27.14",
+    "rollup-plugin-typescript": "^1.0.1",
+    "serve": "^11.2.0",
+    "tslib": "^1.10.0",
+    "typescript": "^3.7.4"
+  },
+  "dependencies": {
+    "dat.gui": "^0.7.6",
+    "gl-matrix": "^3.1.0"
+  }
+}
