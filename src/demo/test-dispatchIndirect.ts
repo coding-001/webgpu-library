@@ -1,3 +1,4 @@
+import { GUI } from 'dat.gui';
 import {
   LiteApp,
   ComputePipeline,
@@ -38,6 +39,8 @@ class TestNumWorkGroups extends LiteApp {
 
   private outputBuffer: GPUBuffer;
 
+  private emptyBuffer: GPUBuffer;
+
   private debugIndirectBuffer: GPUBuffer;
 
   private debugOutputBuffer: GPUBuffer;
@@ -55,7 +58,11 @@ class TestNumWorkGroups extends LiteApp {
     this.outputBuffer = device.createBuffer({
       size: 4,
       // eslint-disable-next-line no-bitwise
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+    });
+    this.emptyBuffer = device.createBuffer({
+      size: 4,
+      usage: GPUBufferUsage.COPY_SRC,
     });
     this.debugIndirectBuffer = device.createBuffer({
       size: 4 * 3,
@@ -91,11 +98,27 @@ class TestNumWorkGroups extends LiteApp {
         },
       },
     ]);
+    const gui = new GUI();
+    gui.add(this, 'reset');
+  }
+
+  public reset(): void {
+    this.ready = false;
+    this.done = false;
   }
 
   public onRender(): void {
     if (!this.ready) {
       this.ready = true;
+
+      this.commandEncoder.copyBufferToBuffer(
+        this.emptyBuffer,
+        0,
+        this.outputBuffer,
+        0,
+        4,
+      );
+
       {
         const passEncoder = this.commandEncoder.beginComputePass();
         this.pipelineOut.bind(passEncoder);
