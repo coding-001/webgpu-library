@@ -71,6 +71,11 @@ export default abstract class LiteApp {
     this.commandEncoder = this.device.createCommandEncoder();
     this.onRender();
     this.device.defaultQueue.submit([this.commandEncoder.finish()]);
+    this.onAfterRender();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, class-methods-use-this
+  public onAfterRender(): void {
   }
 
   public abstract async onInit(device: GPUDevice): Promise<void>;
