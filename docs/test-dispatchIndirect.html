@@ -56,7 +56,6 @@ class TestNumWorkGroups extends LiteApp {
         super(...arguments);
         this.ready = false;
         this.done = false;
-        this.mappedGroups = [];
     }
     async onInit(device) {
         this.indirectBuffer = device.createBuffer({
@@ -67,12 +66,12 @@ class TestNumWorkGroups extends LiteApp {
         this.outputBuffer = device.createBuffer({
             size: 4,
             // eslint-disable-next-line no-bitwise
-            usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.STORAGE,
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
         });
-        // this.emptyBuffer = device.createBuffer({
-        //   size: 4,
-        //   usage: GPUBufferUsage.COPY_SRC,
-        // });
+        this.emptyBuffer = device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.COPY_SRC,
+        });
         this.debugIndirectBuffer = device.createBuffer({
             size: 4 * 3,
             // eslint-disable-next-line no-bitwise
@@ -115,20 +114,9 @@ class TestNumWorkGroups extends LiteApp {
         this.done = false;
     }
     onRender() {
-        console.log(this.time, this.mappedGroups.length);
-        if (this.mappedGroups.length) {
-            const mappedGroup = this.mappedGroups.shift();
-            new Uint32Array(mappedGroup.arrayBuffer).fill(0);
-            mappedGroup.buffer.unmap();
-        }
         if (!this.ready) {
-            // this.commandEncoder.copyBufferToBuffer(
-            //   this.emptyBuffer,
-            //   0,
-            //   this.outputBuffer,
-            //   0,
-            //   4,
-            // );
+            this.ready = true;
+            this.commandEncoder.copyBufferToBuffer(this.emptyBuffer, 0, this.outputBuffer, 0, 4);
             {
                 const passEncoder = this.commandEncoder.beginComputePass();
                 this.pipelineOut.bind(passEncoder);
@@ -143,42 +131,19 @@ class TestNumWorkGroups extends LiteApp {
                 passEncoder.dispatchIndirect(this.indirectBuffer, 0);
                 passEncoder.endPass();
             }
-            // this.commandEncoder.copyBufferToBuffer(
-            //   this.indirectBuffer,
-            //   0,
-            //   this.debugIndirectBuffer,
-            //   0,
-            //   4 * 3,
-            // );
-            // this.commandEncoder.copyBufferToBuffer(
-            //   this.outputBuffer,
-            //   0,
-            //   this.debugOutputBuffer,
-            //   0,
-            //   4,
-            // );
+            this.commandEncoder.copyBufferToBuffer(this.indirectBuffer, 0, this.debugIndirectBuffer, 0, 4 * 3);
+            this.commandEncoder.copyBufferToBuffer(this.outputBuffer, 0, this.debugOutputBuffer, 0, 4);
         }
         else if (!this.done) {
             this.done = true;
-            /* (async (): Promise<void> => {
-              const arrayIndirect = new Uint32Array(await this.debugIndirectBuffer.mapReadAsync());
-              this.debugIndirectBuffer.unmap();
-              const arrayOutput = new Uint32Array(await this.debugOutputBuffer.mapReadAsync());
-              this.debugOutputBuffer.unmap();
-              // eslint-disable-next-line no-console
-              console.log(arrayIndirect, arrayOutput);
-            })(); */
-        }
-    }
-    onAfterRender() {
-        if (!this.ready) {
-            this.ready = true;
-            this.outputBuffer.mapWriteAsync().then((arrayBuffer) => {
-                this.mappedGroups.push({
-                    buffer: this.outputBuffer,
-                    arrayBuffer,
-                });
-            });
+            (async () => {
+                const arrayIndirect = new Uint32Array(await this.debugIndirectBuffer.mapReadAsync());
+                this.debugIndirectBuffer.unmap();
+                const arrayOutput = new Uint32Array(await this.debugOutputBuffer.mapReadAsync());
+                this.debugOutputBuffer.unmap();
+                // eslint-disable-next-line no-console
+                console.log(arrayIndirect, arrayOutput);
+            })();
         }
     }
 }
