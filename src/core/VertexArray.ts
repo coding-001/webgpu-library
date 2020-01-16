@@ -47,6 +47,8 @@ export interface VertexArrayBufferDescriptor {
     offset?: number;
     format?: VertexFormat;
   }[];
+  instanceCount?: number;
+  offset?: number;
 }
 
 let lastID = 0;

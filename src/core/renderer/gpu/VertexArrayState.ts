@@ -1,6 +1,9 @@
 import VertexArray from '../../VertexArray';
 import KeyDefine from '../KeyDefine';
 
+// https://github.com/gpuweb/gpuweb/issues/26
+// D3D12 or Metal has no VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MODE_MAP: any = {
   POINTS: 'point-list',
@@ -15,7 +18,7 @@ const MODE_MAP: any = {
 export default class VertexArrayState {
   private indexBuffer: GPUBuffer;
 
-  private buffers: GPUBuffer[] = [];
+  private buffers: { buffer: GPUBuffer; offset: number }[] = [];
 
   private count: number;
 
@@ -35,24 +38,31 @@ export default class VertexArrayState {
   public constructor(device: GPUDevice, vao: VertexArray) {
     this.keys.push('uint32');
     if (vao.indexBuffer) {
+      const [buffer, arrayBuffer] = device.createBufferMapped({
+        size: vao.indexBuffer.byteLength,
+        usage: GPUBufferUsage.INDEX,
+      });
       if (vao.indexBuffer instanceof Uint16Array) {
         this.vertexState.indexFormat = 'uint16';
         this.keys[0] = 'uint16';
+        new Uint16Array(arrayBuffer).set(vao.indexBuffer);
+      } else if (vao.indexBuffer instanceof Uint32Array) {
+        new Uint32Array(arrayBuffer).set(vao.indexBuffer);
       }
-      this.indexBuffer = device.createBuffer({
-        size: vao.indexBuffer.byteLength,
-        // eslint-disable-next-line no-bitwise
-        usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-      });
-      this.indexBuffer.setSubData(0, vao.indexBuffer);
+      buffer.unmap();
+      this.indexBuffer = buffer;
     }
     let inShaderLocation = 0;
     let outShaderLocation = 0;
+    const bufferMap: Map<ArrayBufferView, GPUBuffer> = new Map();
     vao.buffers.forEach((buffer, i) => {
+      if (buffer.instanceCount) {
+        this.instanceCount = buffer.instanceCount;
+      }
       this.keys.push(`buffer${i}`);
       const vertexBuffer: GPUVertexBufferLayoutDescriptor = {
         arrayStride: buffer.arrayStride,
-        stepMode: 'vertex',
+        stepMode: buffer.instanceCount ? 'instance' : 'vertex',
         attributes: new Array<GPUVertexAttributeDescriptor>(),
       };
       this.vertexState.vertexBuffers.push(vertexBuffer);
@@ -64,11 +74,7 @@ export default class VertexArrayState {
         });
         const name = attribute.name.toUpperCase();
         this.keys.push(new KeyDefine(`IN_${name}`, inShaderLocation));
-        // TODO: set instanceCount vertexBuffer.stepMode once
-        if (attribute.name.startsWith('transform')) {
-          this.instanceCount = buffer.data.byteLength / 4 / 16;
-          vertexBuffer.stepMode = 'instance';
-        } else {
+        if (!buffer.instanceCount) {
           this.keys.push(new KeyDefine(`OUT_${name}`, outShaderLocation));
           if (attribute.name === 'tangent') {
             outShaderLocation += 3;
@@ -78,13 +84,21 @@ export default class VertexArrayState {
         }
         inShaderLocation += 1;
       });
-      const gpuBuffer = device.createBuffer({
-        size: buffer.data.byteLength,
-        // eslint-disable-next-line no-bitwise
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-      });
-      gpuBuffer.setSubData(0, buffer.data);
-      this.buffers.push(gpuBuffer);
+      let gpuBuffer = bufferMap.get(buffer.data);
+      if (!gpuBuffer) {
+        const [mappedBuffer, arrayBuffer] = device.createBufferMapped({
+          size: buffer.data.byteLength,
+          usage: GPUBufferUsage.VERTEX,
+        });
+        gpuBuffer = mappedBuffer;
+        // TODO: handle other type
+        if (buffer.data instanceof Float32Array) {
+          new Float32Array(arrayBuffer).set(buffer.data);
+        }
+        gpuBuffer.unmap();
+        bufferMap.set(buffer.data, gpuBuffer);
+      }
+      this.buffers.push({ buffer: gpuBuffer, offset: buffer.offset || 0 });
     });
     this.count = vao.count;
     this.keys.push(vao.mode);
@@ -95,7 +109,7 @@ export default class VertexArrayState {
 
   public bind(bundleEncoder: GPURenderPassEncoder | GPURenderBundleEncoder): void {
     this.buffers.forEach((buffer, i) => {
-      bundleEncoder.setVertexBuffer(i, buffer);
+      bundleEncoder.setVertexBuffer(i, buffer.buffer, buffer.offset);
     });
     if (this.indexBuffer) {
       bundleEncoder.setIndexBuffer(this.indexBuffer);
@@ -116,7 +130,7 @@ export default class VertexArrayState {
       this.indexBuffer = null;
     }
     this.buffers.forEach((buffer) => {
-      buffer.destroy();
+      buffer.buffer.destroy();
     });
     this.buffers = null;
   }
