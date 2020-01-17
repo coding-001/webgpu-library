@@ -39,4 +39,8 @@ export default class ComputePipeline extends Pipeline {
     });
     computeShaderModule.free();
   }
+
+  public bind(passEncoder: GPUComputePassEncoder): void {
+    passEncoder.setPipeline(this.pipeline as GPUComputePipeline);
+  }
 }

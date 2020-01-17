@@ -151,6 +151,10 @@ export default class RenderPipeline extends Pipeline {
     this.pipeline = this.device.createRenderPipeline(this.pipelineDescriptor);
   }
 
+  public bind(passEncoder: GPURenderPassEncoder | GPURenderBundleEncoder): void {
+    passEncoder.setPipeline(this.pipeline as GPURenderPipeline);
+  }
+
   public get enableMSAA(): boolean {
     return this._enableMSAA;
   }

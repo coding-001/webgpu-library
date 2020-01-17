@@ -76,12 +76,6 @@ export default class Pipeline {
     return this._bindGroupLayouts;
   }
 
-  public bind(
-    passEncoder: GPURenderPassEncoder | GPURenderBundleEncoder | GPUComputePassEncoder,
-  ): void {
-    passEncoder.setPipeline(this.pipeline);
-  }
-
   public getBindGroupLayout(index: number): GPUBindGroupLayout {
     let result = this._bindGroupLayouts[index];
     if (!result) {
