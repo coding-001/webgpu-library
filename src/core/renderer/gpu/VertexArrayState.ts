@@ -20,7 +20,7 @@ export default class VertexArrayState {
 
   private buffers: { buffer: GPUBuffer; offset: number }[] = [];
 
-  private count: number;
+  public readonly count: number;
 
   public readonly keys: (string | KeyDefine)[] = [];
 
