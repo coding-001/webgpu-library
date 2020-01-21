@@ -77,7 +77,7 @@ class DrawIndirectDemo extends LiteApp {
     });
     this.planeVaoState = new VertexArrayState(device, planeVao);
     this.indirectBuffer = device.createBuffer({
-      size: 4 * 6,
+      size: 4 * 4,
       // eslint-disable-next-line no-bitwise
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.INDIRECT,
     });
