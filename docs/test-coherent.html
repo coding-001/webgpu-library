@@ -30,11 +30,11 @@ import { LiteApp, ComputePipeline, KeyDefine } from './js/bundle.js';
 const COMPUTE_SHADER = `
 layout (local_size_x = WORKGROUP_SIZE) in;
 
-layout(set = 0, binding = 0) readonly buffer InputBuffer {
+layout(set = 0, binding = 0) coherent readonly buffer InputBuffer {
   float[] b_input;
 };
 
-layout(set = 0, binding = 1) writeonly buffer OutputBuffer {
+layout(set = 0, binding = 1) coherent writeonly buffer OutputBuffer {
   float[] b_output;
 };
 
