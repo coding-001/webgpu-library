@@ -1,19 +1,6 @@
 import typescript from 'rollup-plugin-typescript';
 import fs from 'fs';
 
-const inputFiles = {};
-if (process.env.Demo) {
-  inputFiles[process.env.Demo] = `./src/demo/${process.env.Demo}.ts`;
-} else {
-  const fileNames = fs.readdirSync(`${__dirname}/../src/demo/`);
-  fileNames.forEach((fileName) => {
-    if (fileName.endsWith('.ts')) {
-      const demoName = fileName.substring(0, fileName.length - 3);
-      inputFiles[demoName] = `./src/demo/${fileName}`;
-    }
-  });
-}
-
 const banner = `<!DOCTYPE html>
 <html lang="en">
 
@@ -45,29 +32,44 @@ const footer = `</script>
 
 </html>`;
 
-export default {
-  input: inputFiles,
-  output: {
-    dir: 'docs',
-    entryFileNames: '[name].html',
-    format: 'es',
-    paths: (id) => {
-      if (id.endsWith('index')) {
-        return './js/bundle.js';
+export default commandLineArgs => {
+  const inputFiles = {};
+  const demo = commandLineArgs.configDemo;
+  if (demo) {
+    inputFiles[demo] = `./src/demo/${demo}.ts`;
+  } else {
+    const fileNames = fs.readdirSync(`${__dirname}/../src/demo/`);
+    fileNames.forEach((fileName) => {
+      if (fileName.endsWith('.ts')) {
+        const demoName = fileName.substring(0, fileName.length - 3);
+        inputFiles[demoName] = `./src/demo/${fileName}`;
       }
-      if (id.endsWith('dat.gui')) {
-        return './js/vendor/dat.gui.js';
-      }
-      if (id.endsWith('gl-matrix')) {
-        return './js/vendor/gl-matrix.js';
-      }
-      return id;
+    });
+  }
+  return {
+    input: inputFiles,
+    output: {
+      dir: 'docs',
+      entryFileNames: '[name].html',
+      format: 'es',
+      paths: (id) => {
+        if (id.endsWith('index')) {
+          return './js/bundle.js';
+        }
+        if (id.endsWith('dat.gui')) {
+          return './js/vendor/dat.gui.js';
+        }
+        if (id.endsWith('gl-matrix')) {
+          return './js/vendor/gl-matrix.js';
+        }
+        return id;
+      },
+      banner,
+      footer,
     },
-    banner,
-    footer,
-  },
-  plugins: [
-    typescript(),
-  ],
-  external: id => /(gl-matrix)|(dat\.gui)|(\/index$)/.test(id),
-};
+    plugins: [
+      typescript(),
+    ],
+    external: id => /(gl-matrix)|(dat\.gui)|(\/index$)/.test(id),
+  };
+}
