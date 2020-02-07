@@ -1084,11 +1084,7 @@ class LiteApp {
     async init() {
         await initGlslang();
         const adapter = await navigator.gpu.requestAdapter();
-        this.device = await adapter.requestDevice({
-            extensions: [
-                'anisotropic-filtering',
-            ],
-        });
+        this.device = await adapter.requestDevice();
         // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
         // @ts-ignore
         this.context = this.canvas.getContext('gpupresent');
