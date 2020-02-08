@@ -31,7 +31,6 @@ void main() {
   // https://bugs.chromium.org/p/chromium/issues/detail?id=1046622
   float stepsFloat = log2(WORKGROUP_SIZE);
   const uint steps = uint(stepsFloat) + 1;
-  // uint steps = uint(log2(float(WORKGROUP_SIZE))) + 1;
   uint step = 0;
 
   shared_data[P0.x] = b_input[P0.x + P0.y * WORKGROUP_SIZE * 2];
