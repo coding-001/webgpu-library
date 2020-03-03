@@ -27,20 +27,20 @@
   "devDependencies": {
     "@types/dat.gui": "^0.7.5",
     "@types/gl-matrix": "^2.4.5",
-    "@typescript-eslint/eslint-plugin": "^2.13.0",
-    "@typescript-eslint/parser": "^2.13.0",
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-import-resolver-typescript": "^2.0.0",
-    "eslint-plugin-import": "^2.19.1",
-    "rollup": "^1.27.14",
+    "eslint-plugin-import": "^2.20.1",
+    "rollup": "^1.32.0",
     "rollup-plugin-typescript": "^1.0.1",
-    "serve": "^11.2.0",
-    "tslib": "^1.10.0",
-    "typescript": "^3.7.4"
+    "serve": "^11.3.0",
+    "tslib": "^1.11.1",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "dat.gui": "^0.7.6",
-    "gl-matrix": "^3.1.0"
+    "gl-matrix": "^3.2.1"
   }
 }
