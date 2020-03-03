@@ -31,80 +31,45 @@ import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.13/dist/web-dev
 import { GUI } from 'https://unpkg.com/dat.gui@0.7.6/build/dat.gui.module.js';
 
 const vertexSource = `#version 450
-#define IN_POSITION 0
-#define OUT_POSITION 0
-#define IN_NORMAL 1
-#define OUT_NORMAL 1
-#define IN_UV 2
-#define OUT_UV 2
 #define FLIP_Y
 
-#ifdef IN_POSITION
-  layout(location = IN_POSITION) in vec4 a_position;
-  layout(location = OUT_POSITION) out vec3 v_position;
-#endif
+layout(location = 0) in vec4 a_position;
+layout(location = 0) out vec3 v_position;
 
-#ifdef IN_NORMAL
-  layout(location = IN_NORMAL) in vec3 a_normal;
-  layout(location = OUT_NORMAL) out vec3 v_normal;
-#endif
+layout(location = 1) in vec3 a_normal;
+layout(location = 1) out vec3 v_normal;
 
-#ifdef IN_UV
-  layout(location = IN_UV) in vec2 a_uv;
-  layout(location = OUT_UV) out vec2 v_uv;
-#endif
+layout(location = 2) in vec2 a_uv;
+layout(location = 2) out vec2 v_uv;
 
 void main() {
   vec4 position = a_position;
   v_position = position.xyz;
   gl_Position = position;
 
-  #ifdef IN_NORMAL
-    v_normal = a_normal;
-  #endif
+  v_normal = a_normal;
 
-  #ifdef IN_UV
-    #ifdef FLIP_Y
-      v_uv = vec2(a_uv.x, 1.0 - a_uv.y);
-    #else
-      v_uv = a_uv;
-    #endif
+  #ifdef FLIP_Y
+    v_uv = vec2(a_uv.x, 1.0 - a_uv.y);
+  #else
+    v_uv = a_uv;
   #endif
 }
 `;
 
 const fragmentSource = `#version 450
-#define IN_POSITION 0
-#define OUT_POSITION 0
-#define IN_NORMAL 1
-#define OUT_NORMAL 1
-#define IN_UV 2
-#define OUT_UV 2
 #define FLIP_Y
 
-const vec4 u_diffuseColor = vec4(1.0, 0.0, 0.0, 1.0);
-const vec3 u_eyePosition = vec3(0.0, 0.0, 0.0);
-
-#ifdef OUT_POSITION
-  layout(location = OUT_POSITION) in vec3 v_position;
-#endif
-
-#ifdef OUT_NORMAL
-  layout(location = OUT_NORMAL) in vec3 v_normal;
-#endif
-
-#ifdef OUT_UV
-  layout(location = OUT_UV) in vec2 v_uv;
-#endif
+layout(location = 0) in vec3 v_position;
+layout(location = 1) in vec3 v_normal;
+layout(location = 2) in vec2 v_uv;
 
 layout(location = 0) out vec4 fragColor;
 
 void main() {
-  vec4 baseColor = u_diffuseColor;
+  vec3 eyeSpacePosition = vec3(0.0, 0.0, 0.0) - v_position;
 
-  vec3 eyeSpacePosition = u_eyePosition - v_position;
-
-  fragColor = baseColor;
+  fragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 `;
 
@@ -114,10 +79,6 @@ void main() {
   const glslang = await glslangModule();
 
   const canvas = document.getElementById('canvas');
-  canvas.style.width = `${canvas.width}px`;
-  canvas.style.height = `${canvas.height}px`;
-  canvas.width *= window.devicePixelRatio;
-  canvas.height *= window.devicePixelRatio;
   const context = canvas.getContext('gpupresent');
   const colorFormat = await context.getSwapChainPreferredFormat(device);
   const swapChain = context.configureSwapChain({
@@ -260,7 +221,6 @@ void main() {
     } else {
       passDescriptor.colorAttachments[0].resolveTarget = undefined;
     }
-    pipelineDescriptor.sampleCount = config.msaa ? 4 : 1;
     pipeline = device.createRenderPipeline(pipelineDescriptor);
   }
 
