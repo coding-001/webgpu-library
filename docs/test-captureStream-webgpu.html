@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
+  <title>WebGPU</title>
+  <style>
+    html,
+    body {
+      margin: 0px;
+    }
+
+    canvas {
+      width: 300px;
+      height: 150px;
+    }
+
+    video {
+      width: 300px;
+      height: 150px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <video id="video" playsinline autoplay muted></video>
+  <script type="module">
+// Implementation Status: https://github.com/gpuweb/gpuweb/wiki/Implementation-Status
+// API: https://gpuweb.github.io/gpuweb/
+// WebGPU Samples: https://github.com/austinEng/webgpu-samples
+// https://webrtc.github.io/samples/src/content/capture/canvas-video/
+
+import TWEEN from 'https://unpkg.com/@tweenjs/tween.js@18.5.0/dist/tween.esm.js';
+
+(async () => {
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
+
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('gpupresent');
+  const colorFormat = await context.getSwapChainPreferredFormat(device);
+  const swapChain = context.configureSwapChain({
+    device,
+    format: colorFormat,
+  });
+
+  const passDescriptor = {
+    colorAttachments: [{
+      attachment: undefined,
+      loadValue: [1, 0, 0, 1],
+    }],
+  };
+  const fromColor = [1.0, 0.0, 0.0, 1.0];
+  const toColor = [0.0, 1.0, 0.0, 1.0];
+  const tween = new TWEEN.Tween(fromColor)
+    .to(toColor)
+    .repeat(Infinity)
+    .yoyo(true)
+    .onUpdate((color) => {
+      passDescriptor.colorAttachments[0].loadValue = color;
+    }).start();
+
+  function draw(commandEncoder, textureView, time) {
+    passDescriptor.colorAttachments[0].attachment = textureView;
+    const passEncoder = commandEncoder.beginRenderPass(passDescriptor);
+    passEncoder.endPass();
+  }
+
+  function render(time) {
+    TWEEN.update();
+    const textureView = swapChain.getCurrentTexture().createView();
+    const commandEncoder = device.createCommandEncoder();
+    draw(commandEncoder, textureView, time);
+    device.defaultQueue.submit([commandEncoder.finish()]);
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+
+  const video = document.getElementById('video');
+  const stream = canvas.captureStream();
+  video.srcObject = stream;
+})();
+  </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
+  <title>WebGL</title>
+  <style>
+    html,
+    body {
+      margin: 0px;
+    }
+
+    canvas {
+      width: 300px;
+      height: 150px;
+    }
+
+    video {
+      width: 300px;
+      height: 150px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <video id="video" playsinline autoplay muted></video>
+  <script type="module">
+// https://webrtc.github.io/samples/src/content/capture/canvas-video/
+
+import TWEEN from 'https://unpkg.com/@tweenjs/tween.js@18.5.0/dist/tween.esm.js';
+
+(async () => {
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('webgl');
+  const fromColor = [1.0, 0.0, 0.0, 1.0];
+  const toColor = [0.0, 1.0, 0.0, 1.0];
+  const tween = new TWEEN.Tween(fromColor)
+    .to(toColor)
+    .repeat(Infinity)
+    .yoyo(true)
+    .onUpdate((color) => {
+      context.clearColor(color[0], color[1], color[2], color[3]);
+    }).start();
+
+  function draw(time) {
+    context.clear(context.COLOR_BUFFER_BIT);
+  }
+
+  function render(time) {
+    TWEEN.update();
+    draw(time);
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+
+  const video = document.getElementById('video');
+  const stream = canvas.captureStream();
+  video.srcObject = stream;
+})();
+  </script>
+</body>
+</html>

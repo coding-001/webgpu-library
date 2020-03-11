@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
+  <title>2D</title>
+  <style>
+    html,
+    body {
+      margin: 0px;
+    }
+
+    canvas {
+      width: 300px;
+      height: 150px;
+    }
+
+    video {
+      width: 300px;
+      height: 150px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <video id="video" playsinline autoplay muted></video>
+  <script type="module">
+// https://webrtc.github.io/samples/src/content/capture/canvas-video/
+
+import TWEEN from 'https://unpkg.com/@tweenjs/tween.js@18.5.0/dist/tween.esm.js';
+
+(async () => {
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  const fromColor = [255.0, 0.0, 0.0];
+  const toColor = [0.0, 255.0, 0.0];
+  const tween = new TWEEN.Tween(fromColor)
+    .to(toColor)
+    .repeat(Infinity)
+    .yoyo(true)
+    .onUpdate((color) => {
+      context.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+    }).start();
+
+  function draw(time) {
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function render(time) {
+    TWEEN.update();
+    draw(time);
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+
+  const video = document.getElementById('video');
+  const stream = canvas.captureStream(30);
+  video.srcObject = stream;
+})();
+  </script>
+</body>
+</html>
