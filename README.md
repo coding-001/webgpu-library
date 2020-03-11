@@ -10,6 +10,7 @@
 `npm start`
 
 ### Chrome WebGPU bugs:
+* [OPEN - canvas.captureStream does not work with WebGPU context](https://bugs.chromium.org/p/chromium/issues/detail?id=1060427)
 * [OPEN - Error: "Unable to create library object" on mac chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=1058034)
 * [OPEN - uint(log2(8)) should be 3, but I get 2](https://bugs.chromium.org/p/chromium/issues/detail?id=1046622)
 * [OPEN - Memory qualifier coherent cause crash on windows](https://bugs.chromium.org/p/chromium/issues/detail?id=1044491)
