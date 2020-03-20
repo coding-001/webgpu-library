@@ -1,6 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-import glslangModule from '../../../../docs/js/vendor/glslang';
+// eslint-disable-next-line import/named
+import glslangModule, { Glslang, ShaderStage, ResultZeroCopy } from 'glslang';
 import KeyDefine from '../KeyDefine';
 
 let glslang: Glslang;

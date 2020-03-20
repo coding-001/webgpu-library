@@ -650,7 +650,7 @@ class KeyDefine {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// eslint-disable-next-line import/named
 let glslang;
 async function initGlslang() {
     glslang = await glslangModule();

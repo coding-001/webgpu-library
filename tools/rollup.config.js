@@ -21,5 +21,5 @@ export default {
   plugins: [
     typescript(),
   ],
-  external: (id) => /(gl-matrix)|(dat\.gui)|(\/glslang$)/.test(id),
+  external: (id) => /(gl-matrix)|(dat\.gui)|(glslang)/.test(id),
 };
