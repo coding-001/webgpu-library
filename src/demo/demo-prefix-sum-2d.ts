@@ -191,10 +191,10 @@ class PrefixSum2DDemo extends LiteApp {
       this.done = true;
       (async (): Promise<void> => {
         const array = new Float32Array(await this.debugBuffer.mapReadAsync());
-        this.debugBuffer.unmap();
         const count = array.filter((value, i) => value === this.output2ArrayBuffer[i]).length;
         // eslint-disable-next-line no-console
         console.log(NUM_ELEMENTS * NUM_ELEMENTS === count);
+        this.debugBuffer.unmap();
       })();
     }
   }

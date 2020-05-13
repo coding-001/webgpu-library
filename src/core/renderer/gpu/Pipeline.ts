@@ -84,10 +84,10 @@ export default class Pipeline {
     return result;
   }
 
-  public createBindGroup(index: number, bindings: GPUBindGroupBinding[]): GPUBindGroup {
+  public createBindGroup(index: number, entries: GPUBindGroupEntry[]): GPUBindGroup {
     const bindingGroup = this.device.createBindGroup({
       layout: this.getBindGroupLayout(index),
-      bindings,
+      entries,
     });
     this.bindGroups[index] = bindingGroup;
     return bindingGroup;

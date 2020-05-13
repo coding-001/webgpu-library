@@ -5,10 +5,11 @@
   "main": "docs/js/bundle.js",
   "scripts": {
     "start": "serve -l tcp://0.0.0.0:8000 docs",
-    "build": "npm run bundle&&npm run demo",
+    "build": "npm run bundle && npm run demo",
     "bundle": "rollup -c tools/rollup.config.js",
     "demo": "rollup -c tools/rollup.config.demo.js",
     "eslint": "eslint --ext .ts src",
+    "compile": "tsc --noEmit --project ./tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

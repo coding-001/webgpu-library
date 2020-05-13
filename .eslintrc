@@ -22,6 +22,12 @@
       "@typescript-eslint/parser": [".ts", ".tsx"]
     },
     "import/resolver": {
+      "node": {
+        "moduleDirectory": [
+          "node_modules",
+          "docs/js/vendor"
+        ]
+      },
       "typescript": {
         "alwaysTryTypes": true
       }

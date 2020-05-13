@@ -313,6 +313,19 @@ function perspective(out, fovy, aspect, near, far) {
     out[15] = 0;
     return out;
 }
+// TODO: performance?
+function updateBufferData(device, buffer, data) {
+    const [gpuBuffer, arrayBuffer] = device.createBufferMapped({
+        size: data.byteLength,
+        usage: GPUBufferUsage.COPY_SRC,
+    });
+    new Float32Array(arrayBuffer).set(data);
+    gpuBuffer.unmap();
+    const commandEncoder = device.createCommandEncoder({});
+    commandEncoder.copyBufferToBuffer(gpuBuffer, 0, buffer, 0, data.byteLength);
+    device.defaultQueue.submit([commandEncoder.finish()]);
+    gpuBuffer.destroy();
+}
 
 const tempVec = vec3.create();
 class Camera extends Trigger {
@@ -708,10 +721,10 @@ class Pipeline {
         }
         return result;
     }
-    createBindGroup(index, bindings) {
+    createBindGroup(index, entries) {
         const bindingGroup = this.device.createBindGroup({
             layout: this.getBindGroupLayout(index),
-            bindings,
+            entries,
         });
         this.bindGroups[index] = bindingGroup;
         return bindingGroup;
@@ -759,6 +772,7 @@ const tempVec4 = vec4.create();
 class DataBuffer {
     constructor(device, size, usage) {
         this.offset = 0;
+        this.device = device;
         this.size = size;
         this.data = new Float32Array(size);
         this.buffer = device.createBuffer({
@@ -766,6 +780,7 @@ class DataBuffer {
             usage,
         });
     }
+    // eslint-disable-next-line no-dupe-class-members
     setVec3(value, normalize = false) {
         if (normalize) {
             vec3.normalize(tempVec3, value);
@@ -776,6 +791,7 @@ class DataBuffer {
         }
         this.offset += 4;
     }
+    // eslint-disable-next-line no-dupe-class-members
     setVec4(value) {
         this.data.set(value, this.offset);
         this.offset += 4;
@@ -805,7 +821,7 @@ class DataBuffer {
         this.update();
     }
     update() {
-        this.buffer.setSubData(0, this.data);
+        updateBufferData(this.device, this.buffer, this.data);
         this.offset = 0;
     }
     destroy() {
@@ -902,7 +918,7 @@ class RenderPipeline extends Pipeline {
             } : undefined,
             vertexState,
             colorStates,
-            sampleCount: 1,
+            sampleCount: enableMSAA ? 4 : 1,
         };
         vertexShaderCode.free();
         if (fragmentShaderCode) {
@@ -914,6 +930,7 @@ class RenderPipeline extends Pipeline {
         this.pipelineDescriptor.sampleCount = this._enableMSAA ? 4 : 1;
         this.pipeline = this.device.createRenderPipeline(this.pipelineDescriptor);
     }
+    // eslint-disable-next-line no-dupe-class-members
     bind(passEncoder) {
         passEncoder.setPipeline(this.pipeline);
     }
@@ -959,9 +976,10 @@ class VertexArrayState {
     constructor(device, vao) {
         this.buffers = [];
         this.keys = [];
+        this.vertexBuffers = [];
         this.vertexState = {
             indexFormat: 'uint32',
-            vertexBuffers: [],
+            vertexBuffers: this.vertexBuffers,
         };
         this.instanceCount = 1;
         this.keys.push('uint32');
@@ -989,14 +1007,15 @@ class VertexArrayState {
                 this.instanceCount = buffer.instanceCount;
             }
             this.keys.push(`buffer${i}`);
+            const attributes = [];
             const vertexBuffer = {
                 arrayStride: buffer.arrayStride,
                 stepMode: buffer.instanceCount ? 'instance' : 'vertex',
-                attributes: new Array(),
+                attributes,
             };
-            this.vertexState.vertexBuffers.push(vertexBuffer);
+            this.vertexBuffers.push(vertexBuffer);
             buffer.attributes.forEach((attribute) => {
-                vertexBuffer.attributes.push({
+                attributes.push({
                     offset: attribute.offset || 0,
                     format: attribute.format || 'float3',
                     shaderLocation: inShaderLocation,
@@ -1036,6 +1055,7 @@ class VertexArrayState {
         this.key = this.keys.join(',');
         this.primitiveTopology = MODE_MAP[vao.mode];
     }
+    // eslint-disable-next-line no-dupe-class-members
     bind(bundleEncoder) {
         this.buffers.forEach((buffer, i) => {
             bundleEncoder.setVertexBuffer(i, buffer.buffer, buffer.offset);
@@ -1044,6 +1064,7 @@ class VertexArrayState {
             bundleEncoder.setIndexBuffer(this.indexBuffer);
         }
     }
+    // eslint-disable-next-line no-dupe-class-members
     draw(bundleEncoder) {
         if (this.indexBuffer) {
             bundleEncoder.drawIndexed(this.count, this.instanceCount, 0, 0, 0);
@@ -1102,11 +1123,7 @@ class LiteApp {
         this.commandEncoder = this.device.createCommandEncoder();
         this.onRender();
         this.device.defaultQueue.submit([this.commandEncoder.finish()]);
-        this.onAfterRender();
-    }
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, class-methods-use-this
-    onAfterRender() {
     }
 }
 
-export { AnimationFrame, Camera, ChangeEvent, ComputePipeline, DataBuffer, KeyDefine, LiteApp, Pipeline, RenderPipeline, StorageBuffer, Trigger, TriggerEvent, UniformBuffer, VertexArray, VertexArrayState, copyMat3ToBuffer, createCubeVao, createSphereVao, getClientPoint, initGlslang, perspective };
+export { AnimationFrame, Camera, ChangeEvent, ComputePipeline, DataBuffer, KeyDefine, LiteApp, Pipeline, RenderPipeline, StorageBuffer, Trigger, TriggerEvent, UniformBuffer, VertexArray, VertexArrayState, copyMat3ToBuffer, createCubeVao, createSphereVao, getClientPoint, initGlslang, perspective, updateBufferData };

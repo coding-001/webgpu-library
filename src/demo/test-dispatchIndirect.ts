@@ -152,11 +152,11 @@ class TestNumWorkGroups extends LiteApp {
       this.done = true;
       (async (): Promise<void> => {
         const arrayIndirect = new Uint32Array(await this.debugIndirectBuffer.mapReadAsync());
-        this.debugIndirectBuffer.unmap();
         const arrayOutput = new Uint32Array(await this.debugOutputBuffer.mapReadAsync());
-        this.debugOutputBuffer.unmap();
         // eslint-disable-next-line no-console
         console.log(arrayIndirect, arrayOutput);
+        this.debugIndirectBuffer.unmap();
+        this.debugOutputBuffer.unmap();
       })();
     }
   }

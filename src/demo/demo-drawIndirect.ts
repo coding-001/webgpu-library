@@ -43,7 +43,7 @@ class DrawIndirectDemo extends LiteApp {
 
   private planeVaoState: VertexArrayState;
 
-  private indirectBuffer: GPUBuffer;
+  private indirectBufferMap = new Map<string, GPUBuffer>();
 
   private show = 'all';
 
@@ -76,12 +76,7 @@ class DrawIndirectDemo extends LiteApp {
       mode: 'TRIANGLE_STRIP',
     });
     this.planeVaoState = new VertexArrayState(device, planeVao);
-    this.indirectBuffer = device.createBuffer({
-      size: 4 * 4,
-      // eslint-disable-next-line no-bitwise
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.INDIRECT,
-    });
-    this.update();
+    this.initIndirectBufferData(device);
     this.pipeline = new RenderPipeline({
       device: this.device,
       vertexShader: VERTEX_SHADER,
@@ -126,28 +121,25 @@ class DrawIndirectDemo extends LiteApp {
       this.sceneBufferDirty = true;
     });
     const gui = new GUI();
-    gui.add(this, 'show', ['all', 'bottom-left', 'top-right', 'none']).onChange(() => {
-      this.update();
-    });
+    gui.add(this, 'show', ['all', 'bottom-left', 'top-right', 'none']);
   }
 
-  private update(): void {
-    switch (this.show) {
-      case 'all':
-        this.indirectBuffer.setSubData(0, new Uint32Array([6, 1, 0, 0]));
-        break;
-      case 'bottom-left':
-        this.indirectBuffer.setSubData(0, new Uint32Array([3, 1, 0, 0]));
-        break;
-      case 'top-right':
-        this.indirectBuffer.setSubData(0, new Uint32Array([3, 1, 3, 0]));
-        break;
-      case 'none':
-        this.indirectBuffer.setSubData(0, new Uint32Array([6, 0, 0, 0]));
-        break;
-      default:
-        break;
-    }
+  private addIndirectBufferData(device: GPUDevice, name: string, data: number[]): void {
+    const [gpuBuffer, arrayBuffer] = device.createBufferMapped({
+      size: 4 * 4,
+      // eslint-disable-next-line no-bitwise
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.INDIRECT,
+    });
+    new Uint32Array(arrayBuffer).set(data);
+    gpuBuffer.unmap();
+    this.indirectBufferMap.set(name, gpuBuffer);
+  }
+
+  private initIndirectBufferData(device: GPUDevice): void {
+    this.addIndirectBufferData(device, 'all', [6, 1, 0, 0]);
+    this.addIndirectBufferData(device, 'bottom-left', [3, 1, 0, 0]);
+    this.addIndirectBufferData(device, 'top-right', [3, 1, 3, 0]);
+    this.addIndirectBufferData(device, 'none', [0, 0, 0, 0]);
   }
 
   private updateSceneBuffer(): void {
@@ -167,7 +159,7 @@ class DrawIndirectDemo extends LiteApp {
     this.pipeline.bind(passEncoder);
     passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));
     this.planeVaoState.bind(passEncoder);
-    passEncoder.drawIndirect(this.indirectBuffer, 0);
+    passEncoder.drawIndirect(this.indirectBufferMap.get(this.show), 0);
 
     passEncoder.endPass();
   }

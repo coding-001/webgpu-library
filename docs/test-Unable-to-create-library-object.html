@@ -136,11 +136,12 @@ void main() {
     +1, -1, -1, 0, 0, -1, 1, 1,
     -1, +1, -1, 0, 0, -1, 0, 0,
   ]);
-  const verticesBuffer = device.createBuffer({
+  const [verticesBuffer, arrayBuffer] = device.createBufferMapped({
     size: cubeVertexArray.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
   });
-  verticesBuffer.setSubData(0, cubeVertexArray);
+  new Float32Array(arrayBuffer).set(cubeVertexArray);
+  verticesBuffer.unmap();
 
   const gui = new GUI();
   const config = {

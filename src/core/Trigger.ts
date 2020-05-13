@@ -3,7 +3,6 @@ import TriggerEvent from './TriggerEvent';
 
 interface TriggerListener {
   (evt: TriggerEvent): void;
-  scope?: object;
 }
 
 interface TriggerListenerBundle {

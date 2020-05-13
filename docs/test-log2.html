@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
   <title>Demo</title>
   <style>
     html,
@@ -135,15 +136,15 @@ class TestLog2 extends LiteApp {
             (async () => {
                 {
                     const array = new Float32Array(await this.debugFloatBuffer.mapReadAsync());
-                    this.debugFloatBuffer.unmap();
                     // eslint-disable-next-line no-console
                     console.log(array);
+                    this.debugFloatBuffer.unmap();
                 }
                 {
                     const array = new Uint32Array(await this.debugUintBuffer.mapReadAsync());
-                    this.debugUintBuffer.unmap();
                     // eslint-disable-next-line no-console
                     console.log(array);
+                    this.debugUintBuffer.unmap();
                 }
             })();
         }

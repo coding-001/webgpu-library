@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
   <title>Demo</title>
   <style>
     html,
@@ -141,9 +142,9 @@ class PrefixSumDemo extends LiteApp {
             this.done = true;
             (async () => {
                 const array = new Float32Array(await this.debugBuffer.mapReadAsync());
-                this.debugBuffer.unmap();
                 // eslint-disable-next-line no-console
                 console.log(array.filter((value, i) => value === this.outputArrayBuffer[i]).length);
+                this.debugBuffer.unmap();
             })();
         }
     }

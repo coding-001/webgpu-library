@@ -104,10 +104,10 @@ class PrefixSumDemo {
     });
     const bindGroupLayouts: GPUBindGroupLayout[] = [];
     bindGroupLayouts.push(device.createBindGroupLayout({
-      bindings: [
+      entries: [
         {
           binding: 0,
-          type: 'storage-buffer',
+          type: 'readonly-storage-buffer',
           visibility: GPUShaderStage.COMPUTE,
         },
         {
@@ -181,10 +181,9 @@ class PrefixSumDemo {
       (async (): Promise<void> => {
         const array = new Float32Array(await this.debugBuffer.mapReadAsync());
         const arrayLength = array.filter((value, i) => value === this.outputArrayBuffer[i]).length;
-        // TODO: firefox crash
-        // this.debugBuffer.unmap();
         // eslint-disable-next-line no-console
         console.log(arrayLength === array.length);
+        this.debugBuffer.unmap();
       })();
     }
   }

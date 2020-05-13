@@ -135,7 +135,7 @@ export default class RenderPipeline extends Pipeline {
       } : undefined,
       vertexState,
       colorStates,
-      sampleCount: 1,
+      sampleCount: enableMSAA ? 4 : 1,
     };
 
     vertexShaderCode.free();
@@ -151,6 +151,12 @@ export default class RenderPipeline extends Pipeline {
     this.pipeline = this.device.createRenderPipeline(this.pipelineDescriptor);
   }
 
+  public bind(passEncoder: GPURenderPassEncoder): void;
+
+  // eslint-disable-next-line no-dupe-class-members
+  public bind(passEncoder: GPURenderBundleEncoder): void
+
+  // eslint-disable-next-line no-dupe-class-members
   public bind(passEncoder: GPURenderPassEncoder | GPURenderBundleEncoder): void {
     passEncoder.setPipeline(this.pipeline as GPURenderPipeline);
   }

@@ -136,15 +136,15 @@ class TestLog2 extends LiteApp {
       (async (): Promise<void> => {
         {
           const array = new Float32Array(await this.debugFloatBuffer.mapReadAsync());
-          this.debugFloatBuffer.unmap();
           // eslint-disable-next-line no-console
           console.log(array);
+          this.debugFloatBuffer.unmap();
         }
         {
           const array = new Uint32Array(await this.debugUintBuffer.mapReadAsync());
-          this.debugUintBuffer.unmap();
           // eslint-disable-next-line no-console
           console.log(array);
+          this.debugUintBuffer.unmap();
         }
       })();
     }

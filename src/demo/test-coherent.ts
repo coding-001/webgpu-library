@@ -141,9 +141,9 @@ class PrefixSumDemo extends LiteApp {
       this.done = true;
       (async (): Promise<void> => {
         const array = new Float32Array(await this.debugBuffer.mapReadAsync());
-        this.debugBuffer.unmap();
         // eslint-disable-next-line no-console
         console.log(array.filter((value, i) => value === this.outputArrayBuffer[i]).length);
+        this.debugBuffer.unmap();
       })();
     }
   }

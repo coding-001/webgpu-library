@@ -86,9 +86,9 @@ class TestNumWorkGroups extends LiteApp {
       this.done = true;
       (async (): Promise<void> => {
         const array = new Uint32Array(await this.debugBuffer.mapReadAsync());
-        this.debugBuffer.unmap();
         // eslint-disable-next-line no-console
         console.log(array);
+        this.debugBuffer.unmap();
       })();
     }
   }

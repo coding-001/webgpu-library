@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
   <title>Demo</title>
   <style>
     html,
@@ -103,10 +104,10 @@ class PrefixSumDemo {
         });
         const bindGroupLayouts = [];
         bindGroupLayouts.push(device.createBindGroupLayout({
-            bindings: [
+            entries: [
                 {
                     binding: 0,
-                    type: 'storage-buffer',
+                    type: 'readonly-storage-buffer',
                     visibility: GPUShaderStage.COMPUTE,
                 },
                 {
@@ -169,10 +170,9 @@ class PrefixSumDemo {
             (async () => {
                 const array = new Float32Array(await this.debugBuffer.mapReadAsync());
                 const arrayLength = array.filter((value, i) => value === this.outputArrayBuffer[i]).length;
-                // TODO: firefox crash
-                // this.debugBuffer.unmap();
                 // eslint-disable-next-line no-console
                 console.log(arrayLength === array.length);
+                this.debugBuffer.unmap();
             })();
         }
     }

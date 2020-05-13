@@ -28,9 +28,11 @@ export default class VertexArrayState {
 
   public readonly primitiveTopology: GPUPrimitiveTopology;
 
+  private vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+
   public readonly vertexState: GPUVertexStateDescriptor = {
     indexFormat: 'uint32',
-    vertexBuffers: [],
+    vertexBuffers: this.vertexBuffers,
   };
 
   private instanceCount = 1;
@@ -60,14 +62,15 @@ export default class VertexArrayState {
         this.instanceCount = buffer.instanceCount;
       }
       this.keys.push(`buffer${i}`);
+      const attributes: GPUVertexAttributeDescriptor[] = [];
       const vertexBuffer: GPUVertexBufferLayoutDescriptor = {
         arrayStride: buffer.arrayStride,
         stepMode: buffer.instanceCount ? 'instance' : 'vertex',
-        attributes: new Array<GPUVertexAttributeDescriptor>(),
+        attributes,
       };
-      this.vertexState.vertexBuffers.push(vertexBuffer);
+      this.vertexBuffers.push(vertexBuffer);
       buffer.attributes.forEach((attribute) => {
-        vertexBuffer.attributes.push({
+        attributes.push({
           offset: attribute.offset || 0,
           format: attribute.format || 'float3',
           shaderLocation: inShaderLocation,
@@ -107,6 +110,12 @@ export default class VertexArrayState {
     this.primitiveTopology = MODE_MAP[vao.mode];
   }
 
+  public bind(bundleEncoder: GPURenderPassEncoder): void;
+
+  // eslint-disable-next-line no-dupe-class-members
+  public bind(bundleEncoder: GPURenderBundleEncoder): void;
+
+  // eslint-disable-next-line no-dupe-class-members
   public bind(bundleEncoder: GPURenderPassEncoder | GPURenderBundleEncoder): void {
     this.buffers.forEach((buffer, i) => {
       bundleEncoder.setVertexBuffer(i, buffer.buffer, buffer.offset);
@@ -116,6 +125,12 @@ export default class VertexArrayState {
     }
   }
 
+  public draw(bundleEncoder: GPURenderPassEncoder): void;
+
+  // eslint-disable-next-line no-dupe-class-members
+  public draw(bundleEncoder: GPURenderBundleEncoder): void;
+
+  // eslint-disable-next-line no-dupe-class-members
   public draw(bundleEncoder: GPURenderPassEncoder | GPURenderBundleEncoder): void {
     if (this.indexBuffer) {
       bundleEncoder.drawIndexed(this.count, this.instanceCount, 0, 0, 0);
