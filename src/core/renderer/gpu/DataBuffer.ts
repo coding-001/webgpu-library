@@ -4,7 +4,7 @@ import {
   vec3,
   vec4,
 } from 'gl-matrix';
-import { copyMat3ToBuffer, updateBufferData } from '../../Util';
+import { copyMat3ToBuffer } from '../../Util';
 
 const tempVec3 = vec3.create();
 const tempVec4 = vec4.create();
@@ -85,7 +85,7 @@ export default class DataBuffer {
   }
 
   public update(): void {
-    updateBufferData(this.device, this.buffer, this.data);
+    this.device.defaultQueue.writeBuffer(this.buffer, 0, this.data);
     this.offset = 0;
   }
 

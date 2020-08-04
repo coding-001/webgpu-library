@@ -199,17 +199,3 @@ export function perspective(
   out[15] = 0;
   return out;
 }
-
-// TODO: performance?
-export function updateBufferData(device: GPUDevice, buffer: GPUBuffer, data: Float32Array): void {
-  const [gpuBuffer, arrayBuffer] = device.createBufferMapped({
-    size: data.byteLength,
-    usage: GPUBufferUsage.COPY_SRC,
-  });
-  new Float32Array(arrayBuffer).set(data);
-  gpuBuffer.unmap();
-  const commandEncoder = device.createCommandEncoder({});
-  commandEncoder.copyBufferToBuffer(gpuBuffer, 0, buffer, 0, data.byteLength);
-  device.defaultQueue.submit([commandEncoder.finish()]);
-  gpuBuffer.destroy();
-}
