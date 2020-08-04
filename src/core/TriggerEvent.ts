@@ -1,11 +1,9 @@
-export default class TriggerEvent {
+export default class TriggerEvent<S> {
   public readonly type: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public source: any;
+  public source: S;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public constructor(type: string, source: any) {
+  public constructor(type: string, source: S) {
     this.type = type;
     this.source = source;
   }

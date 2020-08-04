@@ -1,16 +1,13 @@
 import TriggerEvent from './TriggerEvent';
 
-export default class ChangeEvent extends TriggerEvent {
+export default class ChangeEvent<S, V> extends TriggerEvent<S> {
   public readonly property?: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly oldValue?: any;
+  public readonly oldValue?: V;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly newValue?: any;
+  public readonly newValue?: V;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public constructor(source: any, property: string, oldValue: any = null, newValue: any = null) {
+  public constructor(source: S, property: string, oldValue?: V, newValue?: V) {
     super('change', source);
     this.property = property;
     this.oldValue = oldValue;

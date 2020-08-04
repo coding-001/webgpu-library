@@ -48,7 +48,7 @@ export default abstract class LiteApp {
     await initGlslang();
     const adapter: GPUAdapter = await navigator.gpu.requestAdapter();
     this.device = await adapter.requestDevice();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     this.context = this.canvas.getContext('gpupresent');
     this.swapChain = this.context.configureSwapChain({

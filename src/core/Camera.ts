@@ -19,7 +19,7 @@ export interface CameraDescriptor {
 
 const tempVec = vec3.create();
 
-export default class Camera extends Trigger {
+export default class Camera extends Trigger<Camera> {
   public canvas: HTMLCanvasElement;
 
   private _fovy = 60;
@@ -82,6 +82,7 @@ export default class Camera extends Trigger {
 
   public constructor(options?: CameraDescriptor) {
     super();
+    this.source = this;
     if (options) {
       if (options.position) {
         if (Array.isArray(options.position)) {
@@ -300,7 +301,7 @@ export default class Camera extends Trigger {
     return this._fovy;
   }
 
-  public set fovy(value) {
+  public set fovy(value: number) {
     const oldValue = this._fovy;
     this._fovy = value;
     this.projectionDirty = true;
@@ -311,7 +312,7 @@ export default class Camera extends Trigger {
     return this._aspect;
   }
 
-  public set aspect(value) {
+  public set aspect(value: number) {
     const oldValue = this._aspect;
     this._aspect = value;
     this.projectionDirty = true;
@@ -322,7 +323,7 @@ export default class Camera extends Trigger {
     return this._near;
   }
 
-  public set near(value) {
+  public set near(value: number) {
     const oldValue = this._near;
     this._near = value;
     this.projectionDirty = true;
@@ -333,7 +334,7 @@ export default class Camera extends Trigger {
     return this._far;
   }
 
-  public set far(value) {
+  public set far(value: number) {
     const oldValue = this._far;
     this._far = value;
     this.projectionDirty = true;
@@ -344,7 +345,7 @@ export default class Camera extends Trigger {
     return this._position;
   }
 
-  public set position(value) {
+  public set position(value: vec3) {
     const oldValue = this._position;
     this._position = value;
     this.viewDirty = true;
@@ -356,7 +357,7 @@ export default class Camera extends Trigger {
     return this._target;
   }
 
-  public set target(value) {
+  public set target(value: vec3) {
     const oldValue = this._target;
     this._target = value;
     this.viewDirty = true;
@@ -386,7 +387,7 @@ export default class Camera extends Trigger {
     return this._rx;
   }
 
-  public set rx(value) {
+  public set rx(value: number) {
     const oldValue = this._rx;
     this._rx = value;
     this.viewDirty = true;
@@ -397,7 +398,7 @@ export default class Camera extends Trigger {
     return this._ry;
   }
 
-  public set ry(value) {
+  public set ry(value: number) {
     let newValue = value;
     if (newValue > this.maxy) {
       newValue = this.maxy;
@@ -415,7 +416,7 @@ export default class Camera extends Trigger {
     return this._miny;
   }
 
-  public set miny(value) {
+  public set miny(value: number) {
     this._miny = value;
     if (this.ry < value) {
       this.ry = value;
@@ -426,7 +427,7 @@ export default class Camera extends Trigger {
     return this._maxy;
   }
 
-  public set maxy(value) {
+  public set maxy(value: number) {
     this._maxy = value;
     if (this.ry > value) {
       this.ry = value;

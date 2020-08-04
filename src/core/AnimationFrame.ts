@@ -1,5 +1,5 @@
 export default class AnimationFrame {
-  private callback: Function;
+  private callback: (time: number) => void;
 
   private timeSpan = 0;
 
@@ -23,7 +23,7 @@ export default class AnimationFrame {
 
   private avgFrameTime = 0;
 
-  public constructor(callback: Function, fps = 30, debug = false) {
+  public constructor(callback: (time: number) => void, fps = 30, debug = false) {
     this.callback = callback;
     this.fps = fps;
     this.debug = debug;

@@ -1,19 +1,21 @@
 import ChangeEvent from './ChangeEvent';
 import TriggerEvent from './TriggerEvent';
 
-interface TriggerListener {
-  (evt: TriggerEvent): void;
+interface TriggerListener<S> {
+  (evt: TriggerEvent<S>): void;
 }
 
-interface TriggerListenerBundle {
-  callback: TriggerListener;
-  scope: object;
+interface TriggerListenerBundle<S> {
+  callback: TriggerListener<S>;
+  scope?: unknown;
 }
 
-export default class Trigger {
-  private listenerMap: Map<string, TriggerListenerBundle[]> = new Map();
+export default class Trigger<S> {
+  private listenerMap: Map<string, TriggerListenerBundle<S>[]> = new Map();
 
-  public on(type: string, callback: TriggerListener, scope?: object): void {
+  protected source: S;
+
+  public on(type: string, callback: TriggerListener<S>, scope?: unknown): void {
     const listeners = this.listenerMap.get(type);
     const bundle = { callback, scope };
     if (listeners) {
@@ -28,7 +30,7 @@ export default class Trigger {
     }
   }
 
-  public off(type: string, callback: TriggerListener): void {
+  public off(type: string, callback: TriggerListener<S>): void {
     const listeners = this.listenerMap.get(type);
     if (listeners) {
       const index = listeners.findIndex((listener) => listener.callback === callback);
@@ -38,7 +40,7 @@ export default class Trigger {
     }
   }
 
-  public fire(event: TriggerEvent): void {
+  public fire(event: TriggerEvent<S>): void {
     const listeners = this.listenerMap.get(event.type);
     if (listeners && listeners.length) {
       listeners.forEach((listener) => {
@@ -47,8 +49,7 @@ export default class Trigger {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public firePropertyChanged(property: string, oldValue: any = null, newValue: any = null): void {
-    this.fire(new ChangeEvent(this, property, oldValue, newValue));
+  public firePropertyChanged<V>(property: string, oldValue?: V, newValue?: V): void {
+    this.fire(new ChangeEvent(this.source, property, oldValue, newValue));
   }
 }
