@@ -81,11 +81,12 @@ class PrefixSum2DDemo extends LiteApp {
 
   public async onInit(device: GPUDevice): Promise<void> {
     this.initData();
-    const [buffer, arrayBuffer] = device.createBufferMapped({
+    const buffer = device.createBuffer({
       size: 4 * NUM_ELEMENTS * NUM_ELEMENTS,
       usage: GPUBufferUsage.STORAGE,
+      mappedAtCreation: true,
     });
-    new Float32Array(arrayBuffer).set(this.inputArrayBuffer);
+    new Float32Array(buffer.getMappedRange()).set(this.inputArrayBuffer);
     buffer.unmap();
     this.inputBuffer = buffer;
     this.output1Buffer = device.createBuffer({

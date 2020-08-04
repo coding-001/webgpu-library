@@ -85,12 +85,13 @@ class DrawIndirectDemo extends LiteApp {
       mode: 'TRIANGLE_STRIP',
     });
     this.planeVaoState = new VertexArrayState(device, planeVao);
-    const [buffer, arrayBuffer] = device.createBufferMapped({
+    const buffer = device.createBuffer({
       size: 4 * 4 * 2,
       usage: GPUBufferUsage.INDIRECT,
+      mappedAtCreation: true,
     });
     this.indirectBuffer = buffer;
-    new Uint32Array(arrayBuffer).set([
+    new Uint32Array(buffer.getMappedRange()).set([
       // vertexCount, instanceCount, firstVertex, firstInstance
       3, 1, 0, 0,
       3, 1, 0, 1,

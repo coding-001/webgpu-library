@@ -40,10 +40,12 @@ export default class VertexArrayState {
   public constructor(device: GPUDevice, vao: VertexArray) {
     this.keys.push('uint32');
     if (vao.indexBuffer) {
-      const [buffer, arrayBuffer] = device.createBufferMapped({
+      const buffer = device.createBuffer({
         size: vao.indexBuffer.byteLength,
         usage: GPUBufferUsage.INDEX,
+        mappedAtCreation: true,
       });
+      const arrayBuffer = buffer.getMappedRange();
       if (vao.indexBuffer instanceof Uint16Array) {
         this.vertexState.indexFormat = 'uint16';
         this.keys[0] = 'uint16';
@@ -89,10 +91,12 @@ export default class VertexArrayState {
       });
       let gpuBuffer = bufferMap.get(buffer.data);
       if (!gpuBuffer) {
-        const [mappedBuffer, arrayBuffer] = device.createBufferMapped({
+        const mappedBuffer = device.createBuffer({
           size: buffer.data.byteLength,
           usage: GPUBufferUsage.VERTEX,
+          mappedAtCreation: true,
         });
+        const arrayBuffer = mappedBuffer.getMappedRange();
         gpuBuffer = mappedBuffer;
         // TODO: handle other type
         if (buffer.data instanceof Float32Array) {

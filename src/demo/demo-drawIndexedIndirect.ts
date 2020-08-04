@@ -128,12 +128,13 @@ class DrawIndexedIndirectDemo extends LiteApp {
   }
 
   private addIndirectBufferData(device: GPUDevice, name: string, data: number[]): void {
-    const [gpuBuffer, arrayBuffer] = device.createBufferMapped({
+    const gpuBuffer = device.createBuffer({
       size: 4 * 5,
       // eslint-disable-next-line no-bitwise
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.INDIRECT,
+      mappedAtCreation: true,
     });
-    new Uint32Array(arrayBuffer).set(data);
+    new Uint32Array(gpuBuffer.getMappedRange()).set(data);
     gpuBuffer.unmap();
     this.indirectBufferMap.set(name, gpuBuffer);
   }

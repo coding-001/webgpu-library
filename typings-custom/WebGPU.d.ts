@@ -274,17 +274,19 @@ declare global {
     size?: number;
   }
 
-  export interface GPUBufferCopyView {
-    buffer: GPUBuffer;
+  export interface GPUTextureDataLayout {
     offset?: number;
     bytesPerRow: number;
     rowsPerImage?: number;
   }
 
+  export interface GPUBufferCopyView extends GPUTextureDataLayout {
+    buffer: GPUBuffer;
+  }
+
   export interface GPUTextureCopyView {
     texture: GPUTexture;
     mipLevel?: number;
-    arrayLayer?: number;
     origin?: GPUOrigin3D;
   }
 
@@ -296,6 +298,7 @@ declare global {
   export interface GPUBufferDescriptor extends GPUObjectDescriptorBase {
     size: number;
     usage: GPUBufferUsageFlags;
+    mappedAtCreation?: boolean;
   }
 
   export interface GPUCommandEncoderDescriptor extends GPUObjectDescriptorBase {
@@ -505,19 +508,15 @@ declare global {
     private __brand: void;
     label: string | undefined;
 
-    //readonly mapping: ArrayBuffer | null;
     destroy(): void;
     unmap(): void;
 
+    mapAsync(offset?: number, size?: number): Promise<void>;
+    getMappedRange(offset?: number, size?: number): ArrayBuffer;
+
+    // TODO: remove
     mapWriteAsync(): Promise<ArrayBuffer>;
     mapReadAsync(): Promise<ArrayBuffer>;
-    // TODO: Remove setSubData (#280)
-    setSubData(
-      offset: number,
-      src: ArrayBufferView,
-      srcOffset?: number,
-      byteLength?: number
-    ): void;
   }
 
   export class GPUCommandBuffer implements GPUObjectBase {
@@ -690,6 +689,17 @@ declare global {
     signal(fence: GPUFence, signalValue: number): void;
     submit(commandBuffers: Iterable<GPUCommandBuffer>): void;
     createFence(descriptor?: GPUFenceDescriptor): GPUFence;
+
+    writeBuffer(buffer: GPUBuffer,
+                bufferOffset: number,
+                data: ArrayBuffer,
+                dataOffset?: number,
+                size?: number): void;
+    writeTexture(destination: GPUTextureCopyView,
+                 data: ArrayBuffer,
+                 dataLayout: GPUTextureDataLayout,
+                 size: GPUExtent3D): void;
+
     copyImageBitmapToTexture(
       source: GPUImageBitmapCopyView,
       destination: GPUTextureCopyView,

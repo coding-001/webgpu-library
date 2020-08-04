@@ -73,11 +73,12 @@ class TestDemo extends LiteApp {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const [buffer, arrayBuffer] = device.createBufferMapped({
+    const buffer = device.createBuffer({
       size: 4 * 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT,
       usage: GPUBufferUsage.STORAGE,
+      mappedAtCreation: true,
     });
-    const floatArrayBuffer = new Float32Array(arrayBuffer);
+    const floatArrayBuffer = new Float32Array(buffer.getMappedRange());
     for (let i = 0, count = 4 * TEXTURE_WIDTH * TEXTURE_HEIGHT; i < count; i += 4) {
       floatArrayBuffer[i] = imageData.data[i] / 255;
       floatArrayBuffer[i + 1] = imageData.data[i + 1] / 255;
