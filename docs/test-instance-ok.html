@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="data:;base64,iVBORw0KGgo=">
+  <title>Test instance</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <script type="module">
+    import glslangModule from 'https://unpkg.com/@webgpu/glslang@0.0.15/dist/web-devel/glslang.js';
+
+    (async () => {
+      if (!navigator.gpu) {
+        const div = document.createElement('div');
+        div.innerHTML = '<div>Your browser does not support WebGPU. Go to <a href="https://webgpu.io">webgpu.io</a> for more information.</div>';
+        document.body.insertBefore(div, canvas);
+        return;
+      }
+
+      // Initialization
+      const adapter = await navigator.gpu.requestAdapter();
+      const device = await adapter.requestDevice();
+      const context = canvas.getContext('gpupresent');
+      const format = await context.getSwapChainPreferredFormat(device);
+      const swapChain = context.configureSwapChain({ device, format });
+
+      const glslang = await glslangModule();
+
+      const vertexShader = `#version 450
+        layout(location = 0) in vec3 a_position;
+        layout(location = 1) in vec3 a_normal;
+        layout(location = 2) in vec2 a_uv;
+        layout(location = 3) in vec4 a_transform0;
+        layout(location = 4) in vec4 a_transform1;
+        layout(location = 5) in vec4 a_transform2;
+        layout(location = 6) in vec4 a_transform3;
+        layout(location = 7) in vec4 a_color;
+
+        layout(location = 0) out vec4 v_color;
+
+        void main () {
+          gl_Position = mat4(a_transform0, a_transform1, a_transform2, a_transform3) * vec4(a_position, 1.0);
+          v_color = a_color;
+        }
+      `;
+      const fragmentShader = `#version 450
+        layout(location = 0) in vec4 v_color;
+
+        layout(location = 0) out vec4 fragColor;
+
+        void main () {
+          fragColor = v_color;
+        }
+      `;
+
+      // Create Render Pipeline
+      const pipeline = device.createRenderPipeline({
+        vertexStage: {
+          module: device.createShaderModule({
+            code: glslang.compileGLSL(vertexShader, 'vertex'),
+          }),
+          entryPoint: 'main',
+        },
+        fragmentStage: {
+          module: device.createShaderModule({
+            code: glslang.compileGLSL(fragmentShader, 'fragment'),
+          }),
+          entryPoint: 'main',
+        },
+        primitiveTopology: 'triangle-list',
+        vertexState: {
+          vertexBuffers: [
+            {
+              arrayStride: 4 * (3 + 3 + 2),
+              attributes: [
+                {
+                  format: 'float3',
+                  offset: 0,
+                  shaderLocation: 0,
+                },
+                {
+                  format: 'float3',
+                  offset: 4 * 3,
+                  shaderLocation: 1,
+                },
+                {
+                  format: 'float2',
+                  offset: 4 * (3 + 3),
+                  shaderLocation: 2,
+                },
+              ],
+            },
+            {
+              arrayStride: 4 * (4 * 4 + 4),
+              stepMode: 'instance',
+              attributes: [
+                {
+                  format: 'float4',
+                  offset: 0,
+                  shaderLocation: 3,
+                },
+                {
+                  format: 'float4',
+                  offset: 4 * 4 * 1,
+                  shaderLocation: 4,
+                },
+                {
+                  format: 'float4',
+                  offset: 4 * 4 * 2,
+                  shaderLocation: 5,
+                },
+                {
+                  format: 'float4',
+                  offset: 4 * 4 * 3,
+                  shaderLocation: 6,
+                },
+                {
+                  format: 'float4',
+                  offset: 4 * 4 * 4,
+                  shaderLocation: 7,
+                },
+              ],
+            },
+          ],
+        },
+        colorStates: [{ format }],
+      });
+
+      // Create Vertex Buffer
+      const positionVertexBuffer = device.createBuffer({
+        size: 4 * (3 + 3 + 2) * 3,
+        usage: GPUBufferUsage.VERTEX,
+        mappedAtCreation: true,
+      });
+      const positionVertexArrayBuffer = positionVertexBuffer.getMappedRange();
+      new Float32Array(positionVertexArrayBuffer).set([
+        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  0.0, 0.0,
+        0.3, 0.0, 0.0,  0.0, 0.0, 1.0,  0.0, 0.0,
+        0.0, 0.3, 0.0,  0.0, 0.0, 1.0,  0.0, 0.0,
+      ]);
+      positionVertexBuffer.unmap();
+
+      // Create Instance Buffer
+      const instanceArrayBuffer = new Float32Array(2 * (16 + 4));
+      let offset = 0;
+      instanceArrayBuffer.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.5, 0, 0, 1], offset);
+      offset += 16;
+      instanceArrayBuffer.set([1, 0, 0, 1], offset);
+      offset += 4;
+      instanceArrayBuffer.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.5, 0, 0, 1], offset);
+      offset += 16;
+      instanceArrayBuffer.set([0, 1, 0, 1], offset);
+      const instanceBuffer = device.createBuffer({
+        size: instanceArrayBuffer.byteLength,
+        usage: GPUBufferUsage.VERTEX,
+        mappedAtCreation: true,
+      });
+      new Float32Array(instanceBuffer.getMappedRange()).set(instanceArrayBuffer);
+      instanceBuffer.unmap();
+
+      const passDescriptor = {
+        colorAttachments: [{
+          attachment: undefined,
+          loadValue: [0, 0, 0, 1],
+        }],
+      };
+
+      function draw(commandEncoder) {
+        const passEncoder = commandEncoder.beginRenderPass(passDescriptor);
+        passEncoder.setPipeline(pipeline);
+        passEncoder.setVertexBuffer(0, positionVertexBuffer);
+        passEncoder.setVertexBuffer(1, instanceBuffer);
+        passEncoder.draw(3, 2);
+        passEncoder.endPass();
+      }
+
+      function render() {
+        const textureView = swapChain.getCurrentTexture().createView();
+        passDescriptor.colorAttachments[0].attachment = textureView;
+        const commandEncoder = device.createCommandEncoder();
+        draw(commandEncoder);
+        device.defaultQueue.submit([commandEncoder.finish()]);
+        requestAnimationFrame(render);
+      }
+
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body>
+</html>
