@@ -136,11 +136,12 @@ void main() {
     +1, -1, -1, 0, 0, -1, 1, 1,
     -1, +1, -1, 0, 0, -1, 0, 0,
   ]);
-  const [verticesBuffer, arrayBuffer] = device.createBufferMapped({
+  const verticesBuffer = device.createBuffer({
     size: cubeVertexArray.byteLength,
-    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+    mappedAtCreation: true,
   });
-  new Float32Array(arrayBuffer).set(cubeVertexArray);
+  new Float32Array(verticesBuffer.getMappedRange()).set(cubeVertexArray);
   verticesBuffer.unmap();
 
   const gui = new GUI();
@@ -242,7 +243,7 @@ void main() {
     const passEncoder = commandEncoder.beginRenderPass(passDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setVertexBuffer(0, verticesBuffer);
-    passEncoder.draw(36, 1, 0, 0);
+    passEncoder.draw(36);
     passEncoder.endPass();
   }
 

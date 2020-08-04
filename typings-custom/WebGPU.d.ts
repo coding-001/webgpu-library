@@ -1,8 +1,9 @@
-// https://github.com/gpuweb/gpuweb/blob/0a48816412b5d08a5fb8b89005e019165a1a2c63/spec/index.bs
-// except #280 which removed setSubData
+// https://github.com/gpuweb/gpuweb/blob/01b20b4ad93fabae1e8e0d7752515f69708d33e0/spec/index.bs
 // except #494 which reverted the addition of GPUAdapter.limits
 // except #591 which removed Uint32Array from GPUShaderModuleDescriptor
-// including #543 which adds GPUPipelineBase.getBindGroupLayout
+// except #708's removal of mapWriteAsync/mapReadAsync/createBufferMapped
+// except #691 et al which added pipeline statistics query (still in flux)
+// including #678 which adds GPUBindGroupLayoutEntry.minBufferBindingSize
 
 export {};
 
@@ -192,15 +193,16 @@ declare global {
 
   export type GPUBufferUsageFlags = number;
   export const GPUBufferUsage: {
-    MAP_READ:  0x0001;
-    MAP_WRITE: 0x0002;
-    COPY_SRC:  0x0004;
-    COPY_DST:  0x0008;
-    INDEX:     0x0010;
-    VERTEX:    0x0020;
-    UNIFORM:   0x0040;
-    STORAGE:   0x0080;
-    INDIRECT:  0x0100;
+    MAP_READ:      0x0001;
+    MAP_WRITE:     0x0002;
+    COPY_SRC:      0x0004;
+    COPY_DST:      0x0008;
+    INDEX:         0x0010;
+    VERTEX:        0x0020;
+    UNIFORM:       0x0040;
+    STORAGE:       0x0080;
+    INDIRECT:      0x0100;
+    QUERY_RESOLVE: 0x0200;
   };
 
   export type GPUColorWriteFlags = number;
@@ -242,10 +244,11 @@ declare global {
     binding: number;
     visibility: GPUShaderStageFlags;
     type: GPUBindingType;
+    hasDynamicOffset?: boolean;
+    minBufferBindingSize?: number;
     viewDimension?: GPUTextureViewDimension;
     textureComponentType?: GPUTextureComponentType;
     multisampled?: boolean;
-    hasDynamicOffset?: boolean;
     storageTextureFormat?: GPUTextureFormat;
   }
 
@@ -408,9 +411,11 @@ declare global {
 
     depthLoadValue: GPULoadOp | number;
     depthStoreOp: GPUStoreOp;
+    depthReadOnly?: boolean;
 
     stencilLoadValue: GPULoadOp | number;
     stencilStoreOp: GPUStoreOp;
+    stencilReadOnly?: boolean;
   }
 
   export interface GPURenderPassDescriptor extends GPUObjectDescriptorBase {
@@ -450,6 +455,8 @@ declare global {
   export interface GPUShaderModuleDescriptor extends GPUObjectDescriptorBase {
     code: Uint32Array | string;
     label?: string;
+
+    sourceMap?: object;
   }
 
   export interface GPUStencilStateFaceDescriptor {
@@ -645,6 +652,8 @@ declare global {
       descriptor: GPURenderBundleEncoderDescriptor
     ): GPURenderBundleEncoder;
 
+    createQuerySet(descriptor: GPUQuerySetDescriptor): GPUQuerySet;
+
     defaultQueue: GPUQueue;
 
     pushErrorScope(filter: GPUErrorFilter): void;
@@ -707,6 +716,21 @@ declare global {
     ): void;
   }
 
+  type GPUQueryType =
+    | "occlusion";
+
+  export interface GPUQuerySetDescriptor extends GPUObjectDescriptorBase {
+    type: GPUQueryType;
+    count: number;
+  }
+
+  export class GPUQuerySet implements GPUObjectBase {
+    private __brand: void;
+    label: string | undefined;
+
+    destroy(): void;
+  }
+
   export interface GPURenderEncoderBase extends GPUProgrammablePassEncoder {
     setPipeline(pipeline: GPURenderPipeline): void;
 
@@ -715,16 +739,16 @@ declare global {
 
     draw(
       vertexCount: number,
-      instanceCount: number,
-      firstVertex: number,
-      firstInstance: number
+      instanceCount?: number,
+      firstVertex?: number,
+      firstInstance?: number
     ): void;
     drawIndexed(
       indexCount: number,
-      instanceCount: number,
-      firstIndex: number,
-      baseVertex: number,
-      firstInstance: number
+      instanceCount?: number,
+      firstIndex?: number,
+      baseVertex?: number,
+      firstInstance?: number
     ): void;
 
     drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): void;
@@ -755,16 +779,16 @@ declare global {
 
     draw(
       vertexCount: number,
-      instanceCount: number,
-      firstVertex: number,
-      firstInstance: number
+      instanceCount?: number,
+      firstVertex?: number,
+      firstInstance?: number
     ): void;
     drawIndexed(
       indexCount: number,
-      instanceCount: number,
-      firstIndex: number,
-      baseVertex: number,
-      firstInstance: number
+      instanceCount?: number,
+      firstIndex?: number,
+      baseVertex?: number,
+      firstInstance?: number
     ): void;
 
     drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): void;
@@ -785,6 +809,9 @@ declare global {
 
     setBlendColor(color: GPUColor): void;
     setStencilReference(reference: number): void;
+
+    beginOcclusionQuery(queryIndex: number): void;
+    endOcclusionQuery(queryIndex: number): void;
 
     executeBundles(bundles: Iterable<GPURenderBundle>): void;
     endPass(): void;
@@ -818,16 +845,16 @@ declare global {
 
     draw(
       vertexCount: number,
-      instanceCount: number,
-      firstVertex: number,
-      firstInstance: number
+      instanceCount?: number,
+      firstVertex?: number,
+      firstInstance?: number
     ): void;
     drawIndexed(
       indexCount: number,
-      instanceCount: number,
-      firstIndex: number,
-      baseVertex: number,
-      firstInstance: number
+      instanceCount?: number,
+      firstIndex?: number,
+      baseVertex?: number,
+      firstInstance?: number
     ): void;
 
     drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): void;
@@ -858,9 +885,27 @@ declare global {
     label: string | undefined;
   }
 
+  export type GPUCompilationMessageType =
+    | "error"
+    | "warning"
+    | "info";
+
+  export interface GPUCompilationMessage {
+    readonly message: string;
+    readonly type: GPUCompilationMessageType;
+    readonly lineNum: number;
+    readonly linePos: number;
+  }
+
+  export interface GPUCompilationInfo {
+    readonly messages: Iterable<GPUCompilationMessage>;
+  }
+
   export class GPUShaderModule implements GPUObjectBase {
     private __brand: void;
     label: string | undefined;
+
+    compilationInfo(): Promise<GPUCompilationInfo>;
   }
 
   export class GPUSwapChain implements GPUObjectBase {

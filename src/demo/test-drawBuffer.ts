@@ -102,7 +102,7 @@ class TestDemo extends LiteApp {
     const passEncoder = this.commandEncoder.beginRenderPass(this.renderPassDescriptor);
     this.pipeline.bind(passEncoder);
     passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));
-    passEncoder.draw(3, 1, 0, 0);
+    passEncoder.draw(3);
     passEncoder.endPass();
   }
 }

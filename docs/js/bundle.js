@@ -64,7 +64,6 @@ class AnimationFrame {
 }
 
 class TriggerEvent {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     constructor(type, source) {
         this.type = type;
         this.source = source;
@@ -72,8 +71,7 @@ class TriggerEvent {
 }
 
 class ChangeEvent extends TriggerEvent {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    constructor(source, property, oldValue = null, newValue = null) {
+    constructor(source, property, oldValue, newValue) {
         super('change', source);
         this.property = property;
         this.oldValue = oldValue;
@@ -115,9 +113,8 @@ class Trigger {
             });
         }
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    firePropertyChanged(property, oldValue = null, newValue = null) {
-        this.fire(new ChangeEvent(this, property, oldValue, newValue));
+    firePropertyChanged(property, oldValue, newValue) {
+        this.fire(new ChangeEvent(this.source, property, oldValue, newValue));
     }
 }
 
@@ -313,19 +310,6 @@ function perspective(out, fovy, aspect, near, far) {
     out[15] = 0;
     return out;
 }
-// TODO: performance?
-function updateBufferData(device, buffer, data) {
-    const [gpuBuffer, arrayBuffer] = device.createBufferMapped({
-        size: data.byteLength,
-        usage: GPUBufferUsage.COPY_SRC,
-    });
-    new Float32Array(arrayBuffer).set(data);
-    gpuBuffer.unmap();
-    const commandEncoder = device.createCommandEncoder({});
-    commandEncoder.copyBufferToBuffer(gpuBuffer, 0, buffer, 0, data.byteLength);
-    device.defaultQueue.submit([commandEncoder.finish()]);
-    gpuBuffer.destroy();
-}
 
 const tempVec = vec3.create();
 class Camera extends Trigger {
@@ -349,6 +333,7 @@ class Camera extends Trigger {
         this._projectionViewMatrix = mat4.create();
         this.projectionDirty = true;
         this.viewDirty = true;
+        this.source = this;
         if (options) {
             if (options.position) {
                 if (Array.isArray(options.position)) {
@@ -821,7 +806,7 @@ class DataBuffer {
         this.update();
     }
     update() {
-        updateBufferData(this.device, this.buffer, this.data);
+        this.device.defaultQueue.writeBuffer(this.buffer, 0, this.data);
         this.offset = 0;
     }
     destroy() {
@@ -984,10 +969,12 @@ class VertexArrayState {
         this.instanceCount = 1;
         this.keys.push('uint32');
         if (vao.indexBuffer) {
-            const [buffer, arrayBuffer] = device.createBufferMapped({
+            const buffer = device.createBuffer({
                 size: vao.indexBuffer.byteLength,
                 usage: GPUBufferUsage.INDEX,
+                mappedAtCreation: true,
             });
+            const arrayBuffer = buffer.getMappedRange();
             if (vao.indexBuffer instanceof Uint16Array) {
                 this.vertexState.indexFormat = 'uint16';
                 this.keys[0] = 'uint16';
@@ -1035,10 +1022,12 @@ class VertexArrayState {
             });
             let gpuBuffer = bufferMap.get(buffer.data);
             if (!gpuBuffer) {
-                const [mappedBuffer, arrayBuffer] = device.createBufferMapped({
+                const mappedBuffer = device.createBuffer({
                     size: buffer.data.byteLength,
                     usage: GPUBufferUsage.VERTEX,
+                    mappedAtCreation: true,
                 });
+                const arrayBuffer = mappedBuffer.getMappedRange();
                 gpuBuffer = mappedBuffer;
                 // TODO: handle other type
                 if (buffer.data instanceof Float32Array) {
@@ -1067,10 +1056,10 @@ class VertexArrayState {
     // eslint-disable-next-line no-dupe-class-members
     draw(bundleEncoder) {
         if (this.indexBuffer) {
-            bundleEncoder.drawIndexed(this.count, this.instanceCount, 0, 0, 0);
+            bundleEncoder.drawIndexed(this.count, this.instanceCount);
         }
         else {
-            bundleEncoder.draw(this.count, this.instanceCount, 0, 0);
+            bundleEncoder.draw(this.count, this.instanceCount);
         }
     }
     destroy() {
@@ -1106,7 +1095,7 @@ class LiteApp {
         await initGlslang();
         const adapter = await navigator.gpu.requestAdapter();
         this.device = await adapter.requestDevice();
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         this.context = this.canvas.getContext('gpupresent');
         this.swapChain = this.context.configureSwapChain({
@@ -1126,4 +1115,4 @@ class LiteApp {
     }
 }
 
-export { AnimationFrame, Camera, ChangeEvent, ComputePipeline, DataBuffer, KeyDefine, LiteApp, Pipeline, RenderPipeline, StorageBuffer, Trigger, TriggerEvent, UniformBuffer, VertexArray, VertexArrayState, copyMat3ToBuffer, createCubeVao, createSphereVao, getClientPoint, initGlslang, perspective, updateBufferData };
+export { AnimationFrame, Camera, ChangeEvent, ComputePipeline, DataBuffer, KeyDefine, LiteApp, Pipeline, RenderPipeline, StorageBuffer, Trigger, TriggerEvent, UniformBuffer, VertexArray, VertexArrayState, copyMat3ToBuffer, createCubeVao, createSphereVao, getClientPoint, initGlslang, perspective };

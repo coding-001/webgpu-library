@@ -137,9 +137,9 @@ export default class VertexArrayState {
   // eslint-disable-next-line no-dupe-class-members
   public draw(bundleEncoder: GPURenderPassEncoder | GPURenderBundleEncoder): void {
     if (this.indexBuffer) {
-      bundleEncoder.drawIndexed(this.count, this.instanceCount, 0, 0, 0);
+      bundleEncoder.drawIndexed(this.count, this.instanceCount);
     } else {
-      bundleEncoder.draw(this.count, this.instanceCount, 0, 0);
+      bundleEncoder.draw(this.count, this.instanceCount);
     }
   }
 
