@@ -1106,12 +1106,16 @@ class LiteApp {
         await this.onInit(this.device);
         this.animationFrame.start();
     }
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
+    onAfterRender() {
+    }
     render(time) {
         this.time = time;
         this.textureView = this.swapChain.getCurrentTexture().createView();
         this.commandEncoder = this.device.createCommandEncoder();
         this.onRender();
         this.device.defaultQueue.submit([this.commandEncoder.finish()]);
+        this.onAfterRender();
     }
 }
 

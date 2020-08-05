@@ -131,17 +131,23 @@ class TestLog2 extends LiteApp {
         0,
         4 * this.size,
       );
-    } else if (!this.done) {
+    }
+  }
+
+  public onAfterRender(): void {
+    if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
         {
-          const array = new Float32Array(await this.debugFloatBuffer.mapReadAsync());
+          await this.debugFloatBuffer.mapAsync(0, 8);
+          const array = new Float32Array(this.debugFloatBuffer.getMappedRange());
           // eslint-disable-next-line no-console
           console.log(array);
           this.debugFloatBuffer.unmap();
         }
         {
-          const array = new Uint32Array(await this.debugUintBuffer.mapReadAsync());
+          await this.debugUintBuffer.mapAsync(0, 8);
+          const array = new Uint32Array(this.debugUintBuffer.getMappedRange());
           // eslint-disable-next-line no-console
           console.log(array);
           this.debugUintBuffer.unmap();
