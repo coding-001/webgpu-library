@@ -45,8 +45,6 @@ class TestNumWorkGroups extends LiteApp {
 
   private debugOutputBuffer: GPUBuffer;
 
-  private ready = false;
-
   private done = false;
 
   public async onInit(device: GPUDevice): Promise<void> {
@@ -103,14 +101,11 @@ class TestNumWorkGroups extends LiteApp {
   }
 
   public reset(): void {
-    this.ready = false;
     this.done = false;
   }
 
   public onRender(): void {
-    if (!this.ready) {
-      this.ready = true;
-
+    if (!this.done) {
       this.commandEncoder.copyBufferToBuffer(
         this.emptyBuffer,
         0,
@@ -148,7 +143,11 @@ class TestNumWorkGroups extends LiteApp {
         0,
         4,
       );
-    } else if (!this.done) {
+    }
+  }
+
+  public onAfterRender(): void {
+    if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
         await this.debugIndirectBuffer.mapAsync(GPUMapMode.READ);

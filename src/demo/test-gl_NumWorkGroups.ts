@@ -31,8 +31,6 @@ class TestNumWorkGroups extends LiteApp {
 
   private size = 2;
 
-  private ready = false;
-
   private done = false;
 
   public async onInit(device: GPUDevice): Promise<void> {
@@ -65,8 +63,7 @@ class TestNumWorkGroups extends LiteApp {
   }
 
   public onRender(): void {
-    if (!this.ready) {
-      this.ready = true;
+    if (!this.done) {
       const passEncoder = this.commandEncoder.beginComputePass();
       this.pipeline.bind(passEncoder);
       passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));
@@ -82,7 +79,11 @@ class TestNumWorkGroups extends LiteApp {
         0,
         4 * this.size,
       );
-    } else if (!this.done) {
+    }
+  }
+
+  public onAfterRender(): void {
+    if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
         await this.debugBuffer.mapAsync(GPUMapMode.READ);

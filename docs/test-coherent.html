@@ -76,7 +76,6 @@ class PrefixSumDemo extends LiteApp {
         super(...arguments);
         this.inputArrayBuffer = new Float32Array(NUM_ELEMENTS);
         this.outputArrayBuffer = new Float32Array(NUM_ELEMENTS);
-        this.ready = false;
         this.done = false;
     }
     async onInit(device) {
@@ -130,8 +129,7 @@ class PrefixSumDemo extends LiteApp {
         }
     }
     onRender() {
-        if (!this.ready) {
-            this.ready = true;
+        if (!this.done) {
             const passEncoder = this.commandEncoder.beginComputePass();
             this.pipeline.bind(passEncoder);
             passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));
@@ -139,7 +137,9 @@ class PrefixSumDemo extends LiteApp {
             passEncoder.endPass();
             this.commandEncoder.copyBufferToBuffer(this.outputBuffer, 0, this.debugBuffer, 0, 4 * NUM_ELEMENTS);
         }
-        else if (!this.done) {
+    }
+    onAfterRender() {
+        if (!this.done) {
             this.done = true;
             (async () => {
                 await this.debugBuffer.mapAsync(GPUMapMode.READ);

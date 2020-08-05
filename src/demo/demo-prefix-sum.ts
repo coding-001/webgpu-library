@@ -73,8 +73,6 @@ class PrefixSumDemo {
 
   private debugBuffer: GPUBuffer;
 
-  private ready = false;
-
   private done = false;
 
   public async init(): Promise<void> {
@@ -148,6 +146,7 @@ class PrefixSumDemo {
     this.commandEncoder = this.device.createCommandEncoder();
     this.onRender();
     this.device.defaultQueue.submit([this.commandEncoder.finish()]);
+    this.onAfterRender();
   }
 
   private initData(): void {
@@ -160,8 +159,7 @@ class PrefixSumDemo {
   }
 
   public onRender(): void {
-    if (!this.ready) {
-      this.ready = true;
+    if (!this.done) {
       const passEncoder = this.commandEncoder.beginComputePass();
       this.pipeline.bind(passEncoder);
       passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));
@@ -177,7 +175,11 @@ class PrefixSumDemo {
         0,
         4 * NUM_ELEMENTS,
       );
-    } else if (!this.done) {
+    }
+  }
+
+  public onAfterRender(): void {
+    if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
         await this.debugBuffer.mapAsync(GPUMapMode.READ);

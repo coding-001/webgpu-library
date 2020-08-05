@@ -83,7 +83,6 @@ class PrefixSum2DDemo extends LiteApp {
         this.output1ArrayBuffer = new Float32Array(NUM_ELEMENTS * NUM_ELEMENTS);
         this.output2ArrayBuffer = new Float32Array(NUM_ELEMENTS * NUM_ELEMENTS);
         this.bindGroups = [];
-        this.ready = false;
         this.done = false;
     }
     async onInit(device) {
@@ -172,8 +171,7 @@ class PrefixSum2DDemo extends LiteApp {
         }
     }
     onRender() {
-        if (!this.ready) {
-            this.ready = true;
+        if (!this.done) {
             const passEncoder = this.commandEncoder.beginComputePass();
             this.pipeline.bind(passEncoder);
             passEncoder.setBindGroup(0, this.bindGroups[0]);
@@ -183,7 +181,9 @@ class PrefixSum2DDemo extends LiteApp {
             passEncoder.endPass();
             this.commandEncoder.copyBufferToBuffer(this.output2Buffer, 0, this.debugBuffer, 0, 4 * NUM_ELEMENTS * NUM_ELEMENTS);
         }
-        else if (!this.done) {
+    }
+    onAfterRender() {
+        if (!this.done) {
             this.done = true;
             (async () => {
                 await this.debugBuffer.mapAsync(GPUMapMode.READ);

@@ -61,8 +61,6 @@ class TestLog2 extends LiteApp {
 
   private debugUintBuffer: GPUBuffer;
 
-  private ready = false;
-
   private done = false;
 
   private size = 11;
@@ -109,8 +107,7 @@ class TestLog2 extends LiteApp {
   }
 
   public onRender(): void {
-    if (!this.ready) {
-      this.ready = true;
+    if (!this.done) {
       const passEncoder = this.commandEncoder.beginComputePass();
       this.pipeline.bind(passEncoder);
       passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));

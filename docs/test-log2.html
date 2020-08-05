@@ -76,7 +76,6 @@ void main() {
 class TestLog2 extends LiteApp {
     constructor() {
         super(...arguments);
-        this.ready = false;
         this.done = false;
         this.size = 11;
     }
@@ -121,8 +120,7 @@ class TestLog2 extends LiteApp {
         ]);
     }
     onRender() {
-        if (!this.ready) {
-            this.ready = true;
+        if (!this.done) {
             const passEncoder = this.commandEncoder.beginComputePass();
             this.pipeline.bind(passEncoder);
             passEncoder.setBindGroup(0, this.pipeline.getBindGroup(0));

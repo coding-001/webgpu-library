@@ -75,8 +75,6 @@ class PrefixSum2DDemo extends LiteApp {
 
   private debugBuffer: GPUBuffer;
 
-  private ready = false;
-
   private done = false;
 
   public async onInit(device: GPUDevice): Promise<void> {
@@ -167,8 +165,7 @@ class PrefixSum2DDemo extends LiteApp {
   }
 
   public onRender(): void {
-    if (!this.ready) {
-      this.ready = true;
+    if (!this.done) {
       const passEncoder = this.commandEncoder.beginComputePass();
       this.pipeline.bind(passEncoder);
       passEncoder.setBindGroup(0, this.bindGroups[0]);
@@ -188,7 +185,11 @@ class PrefixSum2DDemo extends LiteApp {
         0,
         4 * NUM_ELEMENTS * NUM_ELEMENTS,
       );
-    } else if (!this.done) {
+    }
+  }
+
+  public onAfterRender(): void {
+    if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
         await this.debugBuffer.mapAsync(GPUMapMode.READ);

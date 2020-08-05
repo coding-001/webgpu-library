@@ -55,7 +55,6 @@ void main() {
 class TestNumWorkGroups extends LiteApp {
     constructor() {
         super(...arguments);
-        this.ready = false;
         this.done = false;
     }
     async onInit(device) {
@@ -111,12 +110,10 @@ class TestNumWorkGroups extends LiteApp {
         gui.add(this, 'reset');
     }
     reset() {
-        this.ready = false;
         this.done = false;
     }
     onRender() {
-        if (!this.ready) {
-            this.ready = true;
+        if (!this.done) {
             this.commandEncoder.copyBufferToBuffer(this.emptyBuffer, 0, this.outputBuffer, 0, 4);
             {
                 const passEncoder = this.commandEncoder.beginComputePass();
@@ -135,7 +132,9 @@ class TestNumWorkGroups extends LiteApp {
             this.commandEncoder.copyBufferToBuffer(this.indirectBuffer, 0, this.debugIndirectBuffer, 0, 4 * 3);
             this.commandEncoder.copyBufferToBuffer(this.outputBuffer, 0, this.debugOutputBuffer, 0, 4);
         }
-        else if (!this.done) {
+    }
+    onAfterRender() {
+        if (!this.done) {
             this.done = true;
             (async () => {
                 await this.debugIndirectBuffer.mapAsync(GPUMapMode.READ);
