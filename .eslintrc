@@ -11,12 +11,6 @@
     "airbnb-base",
     "plugin:@typescript-eslint/recommended"
   ],
-  "globals": {
-    "GPUBufferUsage": false,
-    "GPUColorWrite": false,
-    "GPUShaderStage": false,
-    "GPUTextureUsage": false
-  },
   "settings": {
     "import/parsers": {
       "@typescript-eslint/parser": [".ts", ".tsx"]
