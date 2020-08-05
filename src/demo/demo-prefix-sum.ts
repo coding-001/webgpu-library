@@ -180,7 +180,8 @@ class PrefixSumDemo {
     } else if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
-        const array = new Float32Array(await this.debugBuffer.mapReadAsync());
+        await this.debugBuffer.mapAsync(GPUMapMode.READ);
+        const array = new Float32Array(this.debugBuffer.getMappedRange());
         const arrayLength = array.filter((value, i) => value === this.outputArrayBuffer[i]).length;
         // eslint-disable-next-line no-console
         console.log(arrayLength === array.length);

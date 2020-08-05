@@ -85,7 +85,8 @@ class TestNumWorkGroups extends LiteApp {
     } else if (!this.done) {
       this.done = true;
       (async (): Promise<void> => {
-        const array = new Uint32Array(await this.debugBuffer.mapReadAsync());
+        await this.debugBuffer.mapAsync(GPUMapMode.READ);
+        const array = new Uint32Array(this.debugBuffer.getMappedRange());
         // eslint-disable-next-line no-console
         console.log(array);
         this.debugBuffer.unmap();

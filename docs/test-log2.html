@@ -137,14 +137,14 @@ class TestLog2 extends LiteApp {
             this.done = true;
             (async () => {
                 {
-                    await this.debugFloatBuffer.mapAsync(0, 8);
+                    await this.debugFloatBuffer.mapAsync(GPUMapMode.READ);
                     const array = new Float32Array(this.debugFloatBuffer.getMappedRange());
                     // eslint-disable-next-line no-console
                     console.log(array);
                     this.debugFloatBuffer.unmap();
                 }
                 {
-                    await this.debugUintBuffer.mapAsync(0, 8);
+                    await this.debugUintBuffer.mapAsync(GPUMapMode.READ);
                     const array = new Uint32Array(this.debugUintBuffer.getMappedRange());
                     // eslint-disable-next-line no-console
                     console.log(array);

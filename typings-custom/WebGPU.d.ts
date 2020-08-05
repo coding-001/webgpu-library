@@ -191,6 +191,12 @@ declare global {
 
   export type GPUTextureAspect = "all" | "stencil-only" | "depth-only";
 
+  export type GPUMapModeFlags = number;
+  export const GPUMapMode: {
+    READ:      0x0001;
+    WRITE:     0x0002;
+  };
+
   export type GPUBufferUsageFlags = number;
   export const GPUBufferUsage: {
     MAP_READ:      0x0001;
@@ -518,12 +524,8 @@ declare global {
     destroy(): void;
     unmap(): void;
 
-    mapAsync(offset?: number, size?: number): Promise<void>;
+    mapAsync(mode: GPUMapModeFlags, offset?: number, size?: number): Promise<void>;
     getMappedRange(offset?: number, size?: number): ArrayBuffer;
-
-    // TODO: remove
-    mapWriteAsync(): Promise<ArrayBuffer>;
-    mapReadAsync(): Promise<ArrayBuffer>;
   }
 
   export class GPUCommandBuffer implements GPUObjectBase {
